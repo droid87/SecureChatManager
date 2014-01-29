@@ -235,33 +235,33 @@ public class SecureChatManager implements SessionKeyExpired {
 	}
 	
 	public SignedSessionKey encryptSessionKey(int _conversationIndex) {
-		Conversation conversation = mConversation.get(_conversationIndex);//TODO
-		byte[] sign = CipherUtil.getHash(conversation.getSessionKeyBase64(), mRSAKeyPair.getPrivateKey());
-		byte[] encrypted = CipherUtil.encryptRSA(mRSAKeyPair.getPublicKey(), conversation.getSessionKeyBase64()); //_conversation.getSessionKey());  
+		Conversation conversation = mConversation.get(_conversationIndex);
+//		byte[] encrypted = CipherUtil.encryptRSA(conversation.getContact().getPuKey(), conversation.getSessionKeyBase64());
+		byte[] encrypted = CipherUtil.encryptRSA(mRSAKeyPair.getPublicKey(), conversation.getSessionKeyBase64()); //TODO DEBUGGING
+		byte[] signature = CipherUtil.signData(conversation.getSessionKeyBase64(), mRSAKeyPair.getPrivateKey());
 		
-		return new SignedSessionKey(encrypted, sign);
+		return new SignedSessionKey(encrypted, signature);
 	}
 	
 	public SignedSessionKey encryptSessionKey(Conversation _conversation) {
-		byte[] sign = CipherUtil.getHash(_conversation.getSessionKeyBase64(), mRSAKeyPair.getPrivateKey());
-		byte[] encrypted = CipherUtil.encryptRSA(mRSAKeyPair.getPublicKey(), _conversation.getSessionKeyBase64()); //_conversation.getContact().getPuKey(), _conversation.getSessionKey());  
+		byte[] encrypted = CipherUtil.encryptRSA(_conversation.getContact().getPuKey(), _conversation.getSessionKeyBase64());
+		byte[] signature = CipherUtil.signData(_conversation.getSessionKeyBase64(), mRSAKeyPair.getPrivateKey());
 		
-		return new SignedSessionKey(encrypted, sign);
+		return new SignedSessionKey(encrypted, signature);
 	}
 	
 	public SignedSessionKey decryptSessionKey(int _conversationIndex, SignedSessionKey _signedKey) {
-		Conversation conversation = mConversation.get(_conversationIndex); //TODO
-		byte[] sessionKey = CipherUtil.decryptRSA(mRSAKeyPair.getPrivateKey(), _signedKey.message);
-		byte[] sign = CipherUtil.decryptRSA(mRSAKeyPair.getPublicKey(), _signedKey.signedHash); //conversation.getContact().getPuKey(), _signedKey.signedHash);
+		Conversation conversation = mConversation.get(_conversationIndex);
+		byte[] plain = CipherUtil.decryptRSA(mRSAKeyPair.getPrivateKey(), _signedKey.message);
 		
-		return new SignedSessionKey(sessionKey, Arrays.equals(sign, CipherUtil.getHash(sessionKey)));
+//		return new SignedSessionKey(plain, CipherUtil.verifyData(plain, _signedKey.signedHash, conversation.getContact().getPuKey()));
+		return new SignedSessionKey(plain, CipherUtil.verifyData(plain, _signedKey.signedHash, mRSAKeyPair.getPublicKey())); //TODO DEBUGGING
 	}
 	
 	public SignedSessionKey decryptSessionKey(Conversation _conversation, SignedSessionKey _signedKey) {
-		byte[] sessionKey = CipherUtil.decryptRSA(mRSAKeyPair.getPrivateKey(), _signedKey.message);
-		byte[] sign = CipherUtil.decryptRSA(_conversation.getContact().getPuKey(), _signedKey.signedHash);
+		byte[] plain = CipherUtil.decryptRSA(mRSAKeyPair.getPrivateKey(), _signedKey.message);
 		
-		return new SignedSessionKey(sessionKey, Arrays.equals(sign, CipherUtil.getHash(sessionKey)));
+		return new SignedSessionKey(plain, CipherUtil.verifyData(plain, _signedKey.signedHash, _conversation.getContact().getPuKey()));
 	}
 
 	@Override
