@@ -26,7 +26,7 @@ public abstract class SessionKey implements Serializable {
 	protected byte[] mSessionKey;
 	protected int mMaxCount;
 	protected int mCount;
-	private transient SecretKey mSecretKey;
+	private SecretKey mSecretKey;
 	private transient Cipher mCipher;
 	
 	

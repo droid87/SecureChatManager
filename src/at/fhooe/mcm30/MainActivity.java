@@ -7,6 +7,8 @@ import java.security.NoSuchAlgorithmException;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Base64;
+import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
@@ -60,7 +62,11 @@ public class MainActivity extends Activity {
 						
 						//get encrypted session key
 						SignedSessionKey sKey = mSecureChatManager.encryptSessionKey(0);
-						mRSAEncrypt.setText(new String(sKey.message));
+//						mRSAEncrypt.setText(new String(sKey.message));
+						byte[] enc = mSecureChatManager.getConversations().get(0).encrypt("TestSecureChat".getBytes());
+						Log.e("securiti::", new String(enc));
+						String dec = new String((mSecureChatManager.getConversations().get(0).decrypt(enc)));
+						Log.e("securiti::", new String(dec));
 						
 						//get decrypted session key
 						SignedSessionKey ssKey = mSecureChatManager.decryptSessionKey(0, sKey);

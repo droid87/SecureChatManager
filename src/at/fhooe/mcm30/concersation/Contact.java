@@ -33,7 +33,7 @@ public class Contact implements Serializable {
 	}
 
 	public Key getPuKey() {
-		if (mPublicKeyEncoded != null) {
+		if ((mPublicKey == null) && (mPublicKeyEncoded != null)) {
 			mPublicKey = getPublicKeyFromEncoded(mPublicKeyEncoded);
 		}
 		return mPublicKey;
