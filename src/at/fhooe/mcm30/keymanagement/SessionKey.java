@@ -18,6 +18,7 @@ import android.util.Base64;
 public abstract class SessionKey implements Serializable {
 
 	private static final long serialVersionUID = -4068275809337954214L;
+	private static final int DEFAULT_KEY_LENGTH = 256;
 	public static final int DEFAULT_MAX_COUNT = 3;
 	private static final byte[] INITIALIZATION_VECTOR = new byte[] {0x00, 0x01, 0x02, 0x03,
 		0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f};
@@ -79,7 +80,7 @@ public abstract class SessionKey implements Serializable {
 		}
 		
 		rand.setSeed(INITIALIZATION_VECTOR);
-		keygen.init(128, rand); //128bit key
+		keygen.init(DEFAULT_KEY_LENGTH, rand);
 		SecretKey skey = keygen.generateKey();
 		
 		return skey.getEncoded();

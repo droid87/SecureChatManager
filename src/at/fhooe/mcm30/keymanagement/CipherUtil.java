@@ -3,6 +3,10 @@ package at.fhooe.mcm30.keymanagement;
 import java.security.Key;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.security.PrivateKey;
+import java.security.PublicKey;
+import java.security.SecureRandom;
+import java.security.Signature;
 
 import javax.crypto.Cipher;
 
@@ -58,20 +62,6 @@ public class CipherUtil {
 		return encryptedByteData;
 	}
 	
-	public static byte[] getHash(byte[] _data, Key _privateKey){
-		MessageDigest md;
-		try {
-			md = MessageDigest.getInstance("SHA-1");
-		} catch (NoSuchAlgorithmException e) {
-			e.printStackTrace();
-			
-			return null;
-		}
-        md.update(_data, 0, _data.length);
-        
-        return encryptRSA(_privateKey, md.digest());
-	}
-	
 	public static byte[] getHash(byte[] _data){
 		MessageDigest md;
 		try {
@@ -84,5 +74,38 @@ public class CipherUtil {
         md.update(_data, 0, _data.length);
         
         return md.digest();
+	}
+	
+	public static byte[] signData(byte[] _data, Key _privateKey) {
+		Signature signer;
+		try {
+			signer = Signature.getInstance("SHA1withRSA");
+			signer.initSign((PrivateKey)_privateKey, new SecureRandom()); //Where do you get the key?
+			signer.update(_data, 0, _data.length);
+			
+			return signer.sign();
+			
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		
+		
+		return null;
+	}
+	
+	public static boolean verifyData(byte[] _data, byte[] _sigBytes, Key _publicKey){
+        Signature signature;
+		try {
+			signature = Signature.getInstance("SHA1withRSA");
+			signature.initVerify((PublicKey) _publicKey);
+	        signature.update(_data);
+	        
+	        return signature.verify(_sigBytes);
+	        
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+        
+		return false;
 	}
 }
