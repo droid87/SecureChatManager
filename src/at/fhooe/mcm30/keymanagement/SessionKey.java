@@ -1,8 +1,6 @@
 package at.fhooe.mcm30.keymanagement;
 
 import java.io.IOException;
-import java.io.NotActiveException;
-import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.security.SecureRandom;
@@ -44,8 +42,6 @@ public abstract class SessionKey implements Serializable {
 		initCipher(mSessionKey);
 	}
 	
-	
-	
 	public void writeObject(ObjectOutputStream out)
             throws IOException, ClassNotFoundException {
        out.defaultWriteObject();
@@ -61,7 +57,6 @@ public abstract class SessionKey implements Serializable {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-		
 	}
 	
 	
@@ -112,6 +107,7 @@ public abstract class SessionKey implements Serializable {
 	public int count() {
 		return mCount;
 	}
+	
 	/**
 	 * encrypt plaintext with the cipher
 	 * 

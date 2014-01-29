@@ -6,7 +6,6 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.security.Key;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import android.content.Context;
@@ -17,6 +16,7 @@ import at.fhooe.mcm30.concersation.Conversation;
 
 public class SecureChatManager implements SessionKeyExpired {
 	
+	private static final long serialVersionUID = -2674366968374272043L;
 	private static final String RSA_KEY_FILE = "rsa_key";
 	private static final String CONVERSATIONS_FILE = "conversations";
 	private static final String CONTACTS_FILE = "contacts";
@@ -131,8 +131,6 @@ public class SecureChatManager implements SessionKeyExpired {
 			oos = new ObjectOutputStream(fos);
 			
 			oos.writeObject(mConversation);
-//			mConversation.get(0).writeObject(oos);
-//			oos.defaultWriteObject(mConversation);
 			
 			oos.flush();
 			oos.close();
