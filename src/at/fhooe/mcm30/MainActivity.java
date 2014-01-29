@@ -5,6 +5,7 @@ import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -23,7 +24,7 @@ public class MainActivity extends Activity {
 	private TextView mRSADecrypt;
 	private EditText mText;
 	
-	private SecureChatManager mSecureChatManager;
+	public static SecureChatManager mSecureChatManager;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -67,6 +68,17 @@ public class MainActivity extends Activity {
 					}
 
 				});
+		((Button) super.findViewById(R.id.bNFCMenu))
+		.setOnClickListener(new OnClickListener() {
+
+			@Override
+			public void onClick(View v) {
+				Intent i = new Intent(MainActivity.this,NFCActivity.class);
+				startActivity(i);				
+			}
+			
+		});
+		
 		((Button) super.findViewById(R.id.bEncrypt))
 				.setOnClickListener(new OnClickListener() {
 
