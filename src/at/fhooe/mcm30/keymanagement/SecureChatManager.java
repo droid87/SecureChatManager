@@ -8,8 +8,12 @@ import java.security.Key;
 import java.util.ArrayList;
 import java.util.List;
 
+import android.bluetooth.BluetoothAdapter;
 import android.content.Context;
+import android.content.SharedPreferences;
+import android.preference.PreferenceManager;
 import android.util.Log;
+import at.fhooe.mcm30.R;
 import at.fhooe.mcm30.concersation.Contact;
 import at.fhooe.mcm30.concersation.Conversation;
 
@@ -278,5 +282,18 @@ public class SecureChatManager implements SessionKeyExpired {
 		
 		//TODO send on other contact
 		//_conversation.getContact().getBTAddress()
+	}
+	
+	public Contact getMyContact() {
+		SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(mContext);
+		String name = sharedPrefs.getString(mContext.getString(R.string.pref_key_name),
+				"-");
+		BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+		String btAdress = "";
+		if (bluetoothAdapter != null) {
+			btAdress = bluetoothAdapter.getAddress();
+		}
+		Contact contact = new Contact(name, btAdress, getPublicKey());
+		return contact;
 	}
 }
