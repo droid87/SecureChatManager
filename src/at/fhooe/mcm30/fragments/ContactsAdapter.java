@@ -19,7 +19,7 @@ public class ContactsAdapter extends ArrayAdapter<Contact>{
 	public ContactsAdapter(Context context, List<Contact> contacts) {
 		super(context, R.layout.list_item, contacts);
 	    this.context = context;
-	    addAll(contacts);
+//	    addAll(contacts);
 	}
 	
 	 @Override

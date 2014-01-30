@@ -237,6 +237,15 @@ public class SecureChatManager implements SessionKeyExpired {
 		mContacts.add(_contact);
 	}
 	
+	public boolean isContactInList(Contact _cont) {
+		for (Contact contact : mContacts) {
+			if (contact.getBTAddress().equalsIgnoreCase(_cont.getBTAddress())) {
+				return true;
+			}
+		}
+		return false;
+	}
+	
 	public void addConversation(Conversation _conversation) {
 		mConversation.add(_conversation);
 		mConversation.get(mConversation.size()-1).registerExpiredSessionKey(this);
