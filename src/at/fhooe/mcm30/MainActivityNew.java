@@ -23,6 +23,7 @@ import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -330,16 +331,10 @@ public class MainActivityNew extends FragmentActivity implements
 		
 		if (partnerContact != null && !SecureChatManager.getInstance(this).isContactInList(partnerContact)) {
 			SecureChatManager.getInstance(this).addContact(partnerContact);
-			
+
 			if (mFragmentContacts != null) {
 				mFragmentContacts.invalidateAdapter();
 			}
 		}
-		
-
-		// mInfoText.setText(mInfoText.getText() + "\n\nOther Contact:\n\n" +
-		// partnerContact.toString());
-
-		// mListContacts.add(partnerContact.toString());
 	}
 }
