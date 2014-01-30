@@ -49,6 +49,7 @@ import at.fhooe.mcm30.fragments.ContactsFragment;
 import at.fhooe.mcm30.fragments.ConversationFragment;
 import at.fhooe.mcm30.fragments.ConversationMessage;
 import at.fhooe.mcm30.keymanagement.SecureChatManager;
+import at.fhooe.mcm30.keymanagement.SessionKey;
 import at.fhooe.mcm30.keymanagement.SignedSessionKey;
 
 public class MainActivityNew extends FragmentActivity implements
@@ -89,6 +90,7 @@ public class MainActivityNew extends FragmentActivity implements
 	private ConnectionThread mBluetoothConnection;
 	
 //	private Conversation mCurrentConversation;
+	private byte[] mSessionKey;
 	
 	private SecureChatManager secureChatManager = SecureChatManager.getInstance(MainActivityNew.this);
 	//----------------------------------------------------------------------------
@@ -211,12 +213,13 @@ public class MainActivityNew extends FragmentActivity implements
 				break;
 			case SIGNED_SESSIONKEY:
 				SignedSessionKey recSignedSessionKey = (SignedSessionKey)receivedWrapper.messageObject;
+				Contact contact = secureChatManager.getContacts().get(0);
 				
-				byte[] sessionKey = secureChatManager.decryptSessionKey(partnerContact.getPuKey(), recSignedSessionKey);
+				byte[] sessionKey = secureChatManager.decryptSessionKey(contact.getPuKey(), recSignedSessionKey);
 				
 				if (sessionKey != null) {
-					secureChatManager.addConversation(new Conversation(partnerContact, sessionKey));
-					
+					secureChatManager.addConversation(new Conversation(contact, sessionKey));
+					mSessionKey = sessionKey;
 //					secureChatManager.getConversations().get(0).setNewSessionKey(sessionKey);
 					
 					Log.i("test","received session key: " + new String(secureChatManager.getConversations().get(0).getSessionKey()));
@@ -272,7 +275,7 @@ public class MainActivityNew extends FragmentActivity implements
 	
 	public void connectBluetooth(Contact _contact) {
 		if (mBluetoothMain != null) {
-			partnerContact = _contact;			
+			partnerContact = _contact;
 			mBluetoothMain.connect(_contact.getBTAddress(), mHandler);
 		}
 	}
@@ -287,6 +290,8 @@ public class MainActivityNew extends FragmentActivity implements
 //		}
 		
 		byte[] sendObject = secureChatManager.getConversations().get(0).encrypt(_message.getBytes());
+		Log.i("test","count: " + secureChatManager.getConversations().size());
+		Log.i("test","USED session key: " + new String(secureChatManager.getConversations().get(0).getSessionKey()));
 //		byte[] decryptSendObject = secureChatManager.getConversations().get(0).decrypt(sendObject);
 		
 		Log.i("test","sent encrypted message: " + new String(sendObject));
