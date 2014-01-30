@@ -91,7 +91,6 @@ public class MainActivityNew extends FragmentActivity implements
 //	private Conversation mCurrentConversation;
 	
 	private SecureChatManager secureChatManager = SecureChatManager.getInstance(MainActivityNew.this);
-	private byte[] mSessionKey;
 	//----------------------------------------------------------------------------
 
 	@Override
@@ -196,6 +195,8 @@ public class MainActivityNew extends FragmentActivity implements
 				Contact receivedContact = (Contact)receivedWrapper.messageObject;
 				secureChatManager.addConversation(new Conversation(receivedContact));
 				
+				Log.i("test", "initial created session key: " + new String(secureChatManager.getConversations().get(0).getSessionKey()));
+				
 				Toast.makeText(MainActivityNew.this,
 						"received message: " + receivedContact.toString(), Toast.LENGTH_LONG).show();
 				
@@ -211,12 +212,12 @@ public class MainActivityNew extends FragmentActivity implements
 			case SIGNED_SESSIONKEY:
 				SignedSessionKey recSignedSessionKey = (SignedSessionKey)receivedWrapper.messageObject;
 				
-				byte[] sessionKey = secureChatManager.decryptSessionKey(0, recSignedSessionKey);
+				byte[] sessionKey = secureChatManager.decryptSessionKey(partnerContact.getPuKey(), recSignedSessionKey);
 				
 				if (sessionKey != null) {
-					secureChatManager.getConversations().get(0).setNewSessionKey(sessionKey);
+					secureChatManager.addConversation(new Conversation(partnerContact, sessionKey));
 					
-					mSessionKey = sessionKey;
+//					secureChatManager.getConversations().get(0).setNewSessionKey(sessionKey);
 					
 					Log.i("test","received session key: " + new String(secureChatManager.getConversations().get(0).getSessionKey()));
 				} else {
@@ -271,21 +272,25 @@ public class MainActivityNew extends FragmentActivity implements
 	
 	public void connectBluetooth(Contact _contact) {
 		if (mBluetoothMain != null) {
-			secureChatManager.addConversation(new Conversation(_contact));			
+			partnerContact = _contact;			
 			mBluetoothMain.connect(_contact.getBTAddress(), mHandler);
 		}
 	}
 	
 	public void sendMessage(String _message) {
-		if (mSessionKey != null) {
-			secureChatManager.getConversations().get(0).setNewSessionKey(mSessionKey);
-		}		
+//		if (mSessionKey != null) {
+//			secureChatManager.getConversations().get(0).setNewSessionKey(mSessionKey);
+//			
+//			Log.i("test", "in send message -> mSessionKey: " + new String(mSessionKey));
+//		} else {
+//			Log.i("test", "in send message -> mSessionKey is null");
+//		}
 		
 		byte[] sendObject = secureChatManager.getConversations().get(0).encrypt(_message.getBytes());
-		byte[] decryptSendObject = secureChatManager.getConversations().get(0).decrypt(sendObject);
+//		byte[] decryptSendObject = secureChatManager.getConversations().get(0).decrypt(sendObject);
 		
 		Log.i("test","sent encrypted message: " + new String(sendObject));
-		Log.i("test","local decrypted message: " + new String(decryptSendObject));
+//		Log.i("test","local decrypted message: " + new String(decryptSendObject));
 		Log.i("test","used session key: " + new String(secureChatManager.getConversations().get(0).getSessionKey()));
 		
 		Wrapper wrapper = new Wrapper(MessageCodes.CHAT_MESSAGE, sendObject);

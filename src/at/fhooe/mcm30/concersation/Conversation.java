@@ -25,6 +25,19 @@ public class Conversation implements Serializable {
 		};
 	}
 	
+	public Conversation(Contact _contact, byte[] _sessionKey) {
+		mContact = _contact;
+		
+		mSessionKey = new SessionKey(_sessionKey) {
+			private static final long serialVersionUID = -4609454401908851459L;
+
+			@Override
+			public void sessionKeyExpired() {
+				expired();
+			}
+		};
+	}
+	
 	public Conversation(Contact _contact, int _maxCount) {
 		mContact = _contact;
 		mSessionKey = new SessionKey(_maxCount) {

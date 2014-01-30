@@ -35,6 +35,13 @@ public abstract class SessionKey implements Serializable {
 		initCipher(mSessionKey);
 	}
 	
+	public SessionKey(byte[] _sessionKey) {
+		mMaxCount = DEFAULT_MAX_COUNT;
+		mSessionKey = _sessionKey;
+		
+		initCipher(mSessionKey);
+	}
+	
 	public SessionKey(int _maxCount) {
 		mMaxCount = _maxCount;
 		mSessionKey = createSessionKey();

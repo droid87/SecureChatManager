@@ -276,11 +276,11 @@ public class SecureChatManager implements SessionKeyExpired {
 		return new SignedSessionKey(encrypted, signature);
 	}
 	
-	public byte[] decryptSessionKey(int _conversationIndex, SignedSessionKey _signedKey) {
-		Conversation conversation = mConversations.get(_conversationIndex);
+	public byte[] decryptSessionKey(Key _publicKey, SignedSessionKey _signedKey) {
+//		Conversation conversation = mConversations.get(_conversationIndex);
 		byte[] plain = CipherUtil.decryptRSA(mRSAKeyPair.getPrivateKey(), _signedKey.message);
 		
-		if( CipherUtil.verifyData(plain, _signedKey.signature, conversation.getContact().getPuKey()))
+		if( CipherUtil.verifyData(plain, _signedKey.signature, _publicKey))
 //		if( CipherUtil.verifyData(plain, _signedKey.signature, mRSAKeyPair.getPublicKey()))//TODO DEBUGGING
 			return plain;
 		else
