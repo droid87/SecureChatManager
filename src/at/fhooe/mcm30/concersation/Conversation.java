@@ -66,6 +66,10 @@ public class Conversation implements Serializable {
 		mSessionKey.renewSessionKey();
 	}
 	
+	public void setNewSessionKey(byte[] _newSessionKey) {
+		mSessionKey.setNewSessionKey(_newSessionKey);
+	}
+	
 	public byte[] encrypt(byte[] _plain) {
 		return mSessionKey.encrypt(_plain);
 	}
