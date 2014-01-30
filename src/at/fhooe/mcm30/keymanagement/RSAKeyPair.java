@@ -33,11 +33,7 @@ public class RSAKeyPair implements Serializable {
 		
 		try {
 			kpg = KeyPairGenerator.getInstance("RSA");
-			kpg.initialize(_size);
-			
-			KeyFactory keyFactory = KeyFactory.getInstance("RSA");
-			
-			
+			kpg.initialize(_size);			
 		} catch (NoSuchAlgorithmException e) {
 			e.printStackTrace();
 		}
