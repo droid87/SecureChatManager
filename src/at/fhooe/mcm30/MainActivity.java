@@ -66,8 +66,8 @@ public class MainActivity extends Activity {
 						Log.e("securiti::", new String(dec));
 						
 						//get decrypted session key
-						byte[] sessionKey = mSecureChatManager.decryptSessionKey(0, sKey);
-						mRSADecrypt.setText(new String(sessionKey));
+//						byte[] sessionKey = mSecureChatManager.decryptSessionKey(0, sKey);
+//						mRSADecrypt.setText(new String(sessionKey));
 					}
 
 				});

@@ -28,6 +28,7 @@ public class MessagesAdapter extends ArrayAdapter<ConversationMessage>{
 	    TextView textViewName = (TextView) rowView.findViewById(R.id.conversation_list_item_name);
 	    TextView textViewText = (TextView) rowView.findViewById(R.id.conversation_list_item_text);
 	    ImageView imageView = (ImageView) rowView.findViewById(R.id.conversation_list_item_image);
+	    imageView.setVisibility(View.INVISIBLE);
 	    
 	    textViewName.setText(getItem(position).getAuthor() + ":");
 	    textViewText.setText(getItem(position).getMsg());	    	    

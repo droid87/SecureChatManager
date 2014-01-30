@@ -1,7 +1,13 @@
 package at.fhooe.mcm30.keymanagement;
 
-public class SignedSessionKey {
+import java.io.Serializable;
 
+public class SignedSessionKey implements Serializable {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 7037732695067990383L;
 	public byte[] message;
 	public byte[] signature;
 	

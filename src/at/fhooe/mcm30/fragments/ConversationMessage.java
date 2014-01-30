@@ -7,7 +7,7 @@ public class ConversationMessage {
 	
 	public ConversationMessage(String _author, String _msg) {
 		author = _author;
-		_msg = msg;
+		msg = _msg;
 	}
 	
 //	private 

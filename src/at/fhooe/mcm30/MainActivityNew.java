@@ -3,6 +3,7 @@ package at.fhooe.mcm30;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.Serializable;
 import java.util.Locale;
 import java.util.UUID;
 
@@ -30,7 +31,6 @@ import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
-import android.util.Base64;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -88,7 +88,10 @@ public class MainActivityNew extends FragmentActivity implements
 	private BluetoothMain mBluetoothMain;
 	private ConnectionThread mBluetoothConnection;
 	
-	private Conversation mCurrentConversation;
+//	private Conversation mCurrentConversation;
+	
+	private SecureChatManager secureChatManager = SecureChatManager.getInstance(MainActivityNew.this);
+	private byte[] mSessionKey;
 	//----------------------------------------------------------------------------
 
 	@Override
@@ -176,9 +179,12 @@ public class MainActivityNew extends FragmentActivity implements
 			
 			Toast.makeText(MainActivityNew.this, "socket connected", Toast.LENGTH_LONG).show();
 			
-			Contact myContact = SecureChatManager.getInstance(MainActivityNew.this).getMyContact();
-			Wrapper wrapper = new Wrapper(MessageCodes.CONTACT, myContact);
-			mBluetoothConnection.write(wrapper);
+			if (mFragmentContacts.isInitiator) {
+				Contact myContact = secureChatManager.getMyContact();
+				Wrapper wrapper = new Wrapper(MessageCodes.CONTACT, myContact);
+				mBluetoothConnection.write(wrapper);
+			}
+			mFragmentContacts.isInitiator = false;
 			break;
 		case BluetoothMain.DATA_RECEIVED:
 			byte[] data = (byte[])msg.obj;
@@ -188,30 +194,55 @@ public class MainActivityNew extends FragmentActivity implements
 			switch (receivedWrapper.messageCode) {
 			case CONTACT:
 				Contact receivedContact = (Contact)receivedWrapper.messageObject;
-				mCurrentConversation = new Conversation(receivedContact);
+				secureChatManager.addConversation(new Conversation(receivedContact));
 				
 				Toast.makeText(MainActivityNew.this,
 						"received message: " + receivedContact.toString(), Toast.LENGTH_LONG).show();
 				
 				mViewPager.setCurrentItem(1,true);
 				
-				SignedSessionKey signedSessionKey = SecureChatManager.getInstance(MainActivityNew.this).encryptSessionKey(mCurrentConversation);
+				SignedSessionKey signedSessionKey = secureChatManager.encryptSessionKey(0);
 				Wrapper sessionKeyWrapper = new Wrapper(MessageCodes.SIGNED_SESSIONKEY, signedSessionKey);
 				mBluetoothConnection.write(sessionKeyWrapper);
 				
-				mCurrentConversation.getSessionKey();
+				Log.i("test","sent session key: " + new String(secureChatManager.getConversations().get(0).getSessionKeyBase64()));
 				
 				break;
 			case SIGNED_SESSIONKEY:
 				SignedSessionKey recSignedSessionKey = (SignedSessionKey)receivedWrapper.messageObject;
 				
-				byte[] sessionKey = SecureChatManager.getInstance(MainActivityNew.this).decryptSessionKey(mCurrentConversation, recSignedSessionKey);
+				byte[] sessionKey = secureChatManager.decryptSessionKey(0, recSignedSessionKey);
 				
 				if (sessionKey != null) {
+					secureChatManager.getConversations().get(0).setNewSessionKey(sessionKey);
 					
+					mSessionKey = sessionKey;
+					
+					Log.i("test","received session key: " + new String(secureChatManager.getConversations().get(0).getSessionKey()));
 				} else {
+					Log.i("test","received session key is null");
 					//TODO: send NACK
 				}
+				break;
+			case CHAT_MESSAGE:
+				byte[] ciphertext = (byte[])receivedWrapper.messageObject;
+				
+				Log.i("test","count conversations: " + secureChatManager.getConversations().size());
+				
+				Log.i("test","received encrypted message: " + new String(ciphertext));
+				
+				
+				byte[] pt = secureChatManager.getConversations().get(0).decrypt(ciphertext);
+				
+				Log.i("test","used session key for decryption: " + new String(secureChatManager.getConversations().get(0).getSessionKey()));
+				String plaintext = new String(pt);
+				
+				Log.i("test","received decrypted message: " + plaintext);
+				
+				Toast.makeText(MainActivityNew.this, plaintext, Toast.LENGTH_LONG).show();
+				
+				ConversationMessage message = new ConversationMessage(secureChatManager.getConversations().get(0).getContact().getName(), plaintext);
+				conversationFragment.addMessage(message);
 				break;
 			}
 			
@@ -240,11 +271,25 @@ public class MainActivityNew extends FragmentActivity implements
 	
 	public void connectBluetooth(Contact _contact) {
 		if (mBluetoothMain != null) {
+			secureChatManager.addConversation(new Conversation(_contact));			
 			mBluetoothMain.connect(_contact.getBTAddress(), mHandler);
-			
-			mCurrentConversation = new Conversation(_contact);
-			SecureChatManager.getInstance(this).addConversation(mCurrentConversation);
 		}
+	}
+	
+	public void sendMessage(String _message) {
+		if (mSessionKey != null) {
+			secureChatManager.getConversations().get(0).setNewSessionKey(mSessionKey);
+		}		
+		
+		byte[] sendObject = secureChatManager.getConversations().get(0).encrypt(_message.getBytes());
+		byte[] decryptSendObject = secureChatManager.getConversations().get(0).decrypt(sendObject);
+		
+		Log.i("test","sent encrypted message: " + new String(sendObject));
+		Log.i("test","local decrypted message: " + new String(decryptSendObject));
+		Log.i("test","used session key: " + new String(secureChatManager.getConversations().get(0).getSessionKey()));
+		
+		Wrapper wrapper = new Wrapper(MessageCodes.CHAT_MESSAGE, sendObject);
+		mBluetoothConnection.write(wrapper);
 	}
 	
 	@Override

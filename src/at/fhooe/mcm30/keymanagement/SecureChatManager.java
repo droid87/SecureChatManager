@@ -12,6 +12,7 @@ import android.bluetooth.BluetoothAdapter;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
+import android.util.Base64;
 import android.util.Log;
 import at.fhooe.mcm30.R;
 import at.fhooe.mcm30.concersation.Contact;
@@ -38,8 +39,11 @@ public class SecureChatManager implements SessionKeyExpired {
 			mContacts = new ArrayList<Contact>();
 		if(!loadConversations())
 			mConversations = new ArrayList<Conversation>();
-		if(!loadRSaKey())
+		if(!loadRSaKey()) {
 			mRSAKeyPair = new RSAKeyPair();
+			storeRSAKey();
+		}
+			
 	}
 	
 	
@@ -238,6 +242,7 @@ public class SecureChatManager implements SessionKeyExpired {
 	
 	public void addContact(Contact _contact) {
 		mContacts.add(_contact);
+		storeContacts();
 	}
 	
 	public boolean isContactInList(Contact _cont) {
@@ -252,12 +257,13 @@ public class SecureChatManager implements SessionKeyExpired {
 	public void addConversation(Conversation _conversation) {
 		mConversations.add(_conversation);
 		mConversations.get(mConversations.size()-1).registerExpiredSessionKey(this);
+		storeConversations();
 	}
 	
 	public SignedSessionKey encryptSessionKey(int _conversationIndex) {
 		Conversation conversation = mConversations.get(_conversationIndex);
-//		byte[] encrypted = CipherUtil.encryptRSA(conversation.getContact().getPuKey(), conversation.getSessionKeyBase64());
-		byte[] encrypted = CipherUtil.encryptRSA(mRSAKeyPair.getPublicKey(), conversation.getSessionKeyBase64()); //TODO DEBUGGING
+		byte[] encrypted = CipherUtil.encryptRSA(conversation.getContact().getPuKey(), conversation.getSessionKeyBase64());
+//		byte[] encrypted = CipherUtil.encryptRSA(mRSAKeyPair.getPublicKey(), conversation.getSessionKeyBase64()); //TODO DEBUGGING
 		byte[] signature = CipherUtil.signData(conversation.getSessionKeyBase64(), mRSAKeyPair.getPrivateKey());
 		
 		return new SignedSessionKey(encrypted, signature);
@@ -274,21 +280,21 @@ public class SecureChatManager implements SessionKeyExpired {
 		Conversation conversation = mConversations.get(_conversationIndex);
 		byte[] plain = CipherUtil.decryptRSA(mRSAKeyPair.getPrivateKey(), _signedKey.message);
 		
-//		if( CipherUtil.verifyData(plain, _signedKey.signature, converstion.getPublicKey()))
-		if( CipherUtil.verifyData(plain, _signedKey.signature, mRSAKeyPair.getPublicKey()))//TODO DEBUGGING
+		if( CipherUtil.verifyData(plain, _signedKey.signature, conversation.getContact().getPuKey()))
+//		if( CipherUtil.verifyData(plain, _signedKey.signature, mRSAKeyPair.getPublicKey()))//TODO DEBUGGING
 			return plain;
 		else
-			return null;
+			return null; //TODO
 	}
 	
 	public byte[] decryptSessionKey(Conversation _conversation, SignedSessionKey _signedKey) {
 		byte[] plain = CipherUtil.decryptRSA(mRSAKeyPair.getPrivateKey(), _signedKey.message);
-		
-//		if( CipherUtil.verifyData(plain, _signedKey.signature, _converstion.getPublicKey()))
-		if( CipherUtil.verifyData(plain, _signedKey.signature, mRSAKeyPair.getPublicKey()))//TODO DEBUGGING
+		Log.i("test","signature: " + new String(_signedKey.signature));
+		if( CipherUtil.verifyData(plain, _signedKey.signature, _conversation.getContact().getPuKey()))
+//		if( CipherUtil.verifyData(plain, _signedKey.signature, mRSAKeyPair.getPublicKey()))//TODO DEBUGGING
 			return plain;
 		else
-			return null;
+			return null; //TODO
 	}
 
 	@Override

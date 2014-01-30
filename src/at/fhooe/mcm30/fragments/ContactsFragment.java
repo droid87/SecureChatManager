@@ -25,6 +25,8 @@ public class ContactsFragment extends Fragment {
 	private ContactsAdapter adapter;
 
 	private SecureChatManager securityManager;
+	
+	public boolean isInitiator = false;
 
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -41,6 +43,7 @@ public class ContactsFragment extends Fragment {
 			@Override
 			public void onItemClick(AdapterView<?> arg0, View arg1, int arg2,
 					long pos) {
+				isInitiator = true;
 				Contact contact = securityManager.getContacts().get((int)pos);
 				
 				MainActivityNew myActivity = (MainActivityNew)getActivity();

@@ -36,7 +36,7 @@ public class CipherUtil {
 			  return null;
 		  }    
 		  
-		  return Base64.encode(encryptedByteData, Base64.DEFAULT);
+		  return encryptedByteData;
 	}
 	
 	/**
@@ -53,7 +53,7 @@ public class CipherUtil {
 		try {
 			cipher = Cipher.getInstance(DEFAULT_RSA_CRYPTO);
 			cipher.init(Cipher.DECRYPT_MODE, rsaKey);      
-			encryptedByteData = cipher.doFinal(Base64.decode(encrypted, Base64.DEFAULT));
+			encryptedByteData = cipher.doFinal(encrypted);
 	
 		} catch (Exception e) {
 			e.printStackTrace();
