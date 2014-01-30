@@ -158,6 +158,10 @@ public abstract class SessionKey implements Serializable {
 		initCipher(mSessionKey);
 	}
 	
+	public void setNewSessionKey(byte[] _sessionKey) {
+		mSessionKey = _sessionKey;
+	}
+	
 	public void increaseCount() {
 		if(--mCount<0)
 			sessionKeyExpired();
