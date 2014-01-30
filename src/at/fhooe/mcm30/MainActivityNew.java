@@ -1,12 +1,19 @@
 package at.fhooe.mcm30;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.Locale;
+import java.util.UUID;
 
 import org.apache.commons.lang.SerializationUtils;
 
 import android.app.ActionBar;
 import android.app.FragmentTransaction;
 import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothServerSocket;
+import android.bluetooth.BluetoothSocket;
 import android.content.Intent;
 import android.nfc.NdefMessage;
 import android.nfc.NdefRecord;
@@ -30,6 +37,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 import android.widget.Toast;
+import at.fhooe.mcm30.bluetooth.BluetoothMain;
 import at.fhooe.mcm30.concersation.Contact;
 import at.fhooe.mcm30.fragments.ContactsFragment;
 import at.fhooe.mcm30.keymanagement.SecureChatManager;
@@ -55,12 +63,18 @@ public class MainActivityNew extends FragmentActivity implements
 	
 	private ContactsFragment mFragmentContacts;
 
+	//NFC-----------------------------------------------------------------------
 	private NfcAdapter mNfcAdapter;
 	private TextView mInfoText;
 	private static final int MESSAGE_SENT = 1;
 
 	private Contact myContact = null;
 	private Contact partnerContact = null;
+	//---------------------------------------------------------------------------
+	
+	//Bluetooth ---------------------------------------------------------------
+	private BluetoothMain mBluetoothMain;
+	//----------------------------------------------------------------------------
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -102,7 +116,7 @@ public class MainActivityNew extends FragmentActivity implements
 					.setTabListener(this));
 		}
 		
-		
+		//NFC ---------------------------------------------------------------------
 		
 		BluetoothAdapter btAdapter = BluetoothAdapter.getDefaultAdapter();
 
@@ -129,6 +143,11 @@ public class MainActivityNew extends FragmentActivity implements
 			// Register callback to listen for message-sent success
 			mNfcAdapter.setOnNdefPushCompleteCallback(this, this);
 		}
+		//NFC ---------------------------------------------------------------------
+		
+		//Bluetooth ---------------------------------------------------------------------
+		mBluetoothMain = new BluetoothMain(this);
+		//Bluetooth ---------------------------------------------------------------------
 	}
 	
 	@Override
@@ -281,11 +300,11 @@ public class MainActivityNew extends FragmentActivity implements
 	public void onNdefPushComplete(NfcEvent event) {
 		// A handler is needed to send messages to the activity when this
 		// callback occurs, because it happens from a binder thread
-		mHandler.obtainMessage(MESSAGE_SENT).sendToTarget();
+		mNFCHandler.obtainMessage(MESSAGE_SENT).sendToTarget();
 	}
 
 	/** This handler receives a message from onNdefPushComplete */
-	private final Handler mHandler = new Handler() {
+	private final Handler mNFCHandler = new Handler() {
 		@Override
 		public void handleMessage(Message msg) {
 			switch (msg.what) {
@@ -341,5 +360,5 @@ public class MainActivityNew extends FragmentActivity implements
 		// partnerContact.toString());
 
 		// mListContacts.add(partnerContact.toString());
-	}
+	}	
 }
