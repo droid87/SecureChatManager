@@ -145,8 +145,8 @@ public abstract class SessionKey implements Serializable {
 			mCipher.init(Cipher.DECRYPT_MODE, mSecretKey, new IvParameterSpec(INITIALIZATION_VECTOR));
 			decrypted = mCipher.doFinal(Base64.decode(encrypted, Base64.DEFAULT));
 
-			e.printStackTrace();
 		} catch (Exception e) {
+			e.printStackTrace();
 		}
 
 		return decrypted;
