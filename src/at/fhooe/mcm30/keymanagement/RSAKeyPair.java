@@ -2,7 +2,6 @@ package at.fhooe.mcm30.keymanagement;
 
 import java.io.Serializable;
 import java.security.Key;
-import java.security.KeyFactory;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
@@ -12,7 +11,7 @@ public class RSAKeyPair implements Serializable {
 	private static final long serialVersionUID = -6972580425612234245L;
 	private KeyPair mKeyPair;
 		
-	public static final int DEFAULT_KEY_SIZE = 2048;	
+	public static final int DEFAULT_KEY_SIZE = 2048;
 	
 	
 	public RSAKeyPair() {
@@ -33,11 +32,7 @@ public class RSAKeyPair implements Serializable {
 		
 		try {
 			kpg = KeyPairGenerator.getInstance("RSA");
-			kpg.initialize(_size);
-			
-			KeyFactory keyFactory = KeyFactory.getInstance("RSA");
-			
-			
+			kpg.initialize(_size);			
 		} catch (NoSuchAlgorithmException e) {
 			e.printStackTrace();
 		}

@@ -24,13 +24,20 @@ public abstract class SessionKey implements Serializable {
 	protected byte[] mSessionKey;
 	protected int mMaxCount;
 	protected int mCount;
-	private SecretKey mSecretKey;
+	private volatile SecretKey mSecretKey;
 	private transient Cipher mCipher;
 	
 	
 	public SessionKey() {
 		mMaxCount = DEFAULT_MAX_COUNT;
 		mSessionKey = createSessionKey();
+		
+		initCipher(mSessionKey);
+	}
+	
+	public SessionKey(byte[] _sessionKey) {
+		mMaxCount = DEFAULT_MAX_COUNT;
+		mSessionKey = _sessionKey;
 		
 		initCipher(mSessionKey);
 	}
@@ -54,12 +61,9 @@ public abstract class SessionKey implements Serializable {
 				in.defaultReadObject();
 				initCipher(mSessionKey);
 			} catch (ClassNotFoundException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 	}
-	
-	
 
 	private byte[] createSessionKey() {
 		KeyGenerator keygen;
@@ -85,7 +89,7 @@ public abstract class SessionKey implements Serializable {
 		try {
 			
 			mSecretKey = new SecretKeySpec(_sessionKey, "AES");
-			mCipher = Cipher.getInstance("AES/CFB8/NoPadding");
+			mCipher = Cipher.getInstance("AES/ECB/ZeroBytePadding");
 			
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -97,11 +101,15 @@ public abstract class SessionKey implements Serializable {
 	}
 	
 	public byte[] getSessionKeyBase64() {
-		return Base64.encode(mSessionKey, Base64.DEFAULT);
+		return mSessionKey;
 	}
 	
 	public int getMaxCount() {
 		return mMaxCount;
+	}
+	
+	public void setMaxCount(int _max) {
+		mMaxCount = _max;
 	}
 	
 	public int count() {
@@ -119,7 +127,7 @@ public abstract class SessionKey implements Serializable {
 		byte[] encrypted = null;
 
 		try {
-			mCipher.init(Cipher.ENCRYPT_MODE, mSecretKey, new IvParameterSpec(INITIALIZATION_VECTOR));
+			mCipher.init(Cipher.ENCRYPT_MODE, mSecretKey);
 			encrypted = mCipher.doFinal(plain);
 
 		} catch (Exception e) {
@@ -127,7 +135,7 @@ public abstract class SessionKey implements Serializable {
 			return null;
 		}
 
-		return Base64.encode(encrypted, Base64.DEFAULT);
+		return encrypted;
 	}
 
 	/**
@@ -140,8 +148,8 @@ public abstract class SessionKey implements Serializable {
 		byte[] decrypted = null;
 
 		try {
-			mCipher.init(Cipher.DECRYPT_MODE, mSecretKey, new IvParameterSpec(INITIALIZATION_VECTOR));
-			decrypted = mCipher.doFinal(Base64.decode(encrypted, Base64.DEFAULT));
+			mCipher.init(Cipher.DECRYPT_MODE, mSecretKey);
+			decrypted = mCipher.doFinal(encrypted);
 
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -157,6 +165,15 @@ public abstract class SessionKey implements Serializable {
 		initCipher(mSessionKey);
 	}
 	
-	abstract public void increaseCount();
-	abstract public void registerExpiredSessionKey(SessionKeyExpired _expired);
+	public void setNewSessionKey(byte[] _sessionKey) {
+		mSessionKey = _sessionKey;
+		initCipher(mSessionKey);
+	}
+	
+	public void increaseCount() {
+		if(--mCount<0)
+			sessionKeyExpired();
+	}
+	
+	abstract public void sessionKeyExpired();
 }

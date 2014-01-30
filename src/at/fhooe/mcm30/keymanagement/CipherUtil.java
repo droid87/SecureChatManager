@@ -1,8 +1,6 @@
 package at.fhooe.mcm30.keymanagement;
 
 import java.security.Key;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.SecureRandom;
@@ -14,6 +12,8 @@ import android.util.Base64;
 
 public class CipherUtil {
 
+	private static final String DEFAULT_SIGNATURE = "SHA256withRSA";
+	private static final String DEFAULT_RSA_CRYPTO = "RSA/ECB/PKCS1Padding";
 	
 	/**
 	 * encrypt the plaintext with the RSA key
@@ -27,7 +27,7 @@ public class CipherUtil {
 		  byte[] encryptedByteData = null;
 		  
 		  try {
-			  cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
+			  cipher = Cipher.getInstance(DEFAULT_RSA_CRYPTO);
 			  cipher.init(Cipher.ENCRYPT_MODE, rsaKey);      
 			  encryptedByteData = cipher.doFinal(plain);
 				  
@@ -36,7 +36,7 @@ public class CipherUtil {
 			  return null;
 		  }    
 		  
-		  return Base64.encode(encryptedByteData, Base64.DEFAULT);
+		  return encryptedByteData;
 	}
 	
 	/**
@@ -51,9 +51,9 @@ public class CipherUtil {
 		byte[] encryptedByteData = null;
 		  
 		try {
-			cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
+			cipher = Cipher.getInstance(DEFAULT_RSA_CRYPTO);
 			cipher.init(Cipher.DECRYPT_MODE, rsaKey);      
-			encryptedByteData = cipher.doFinal(Base64.decode(encrypted, Base64.DEFAULT));
+			encryptedByteData = cipher.doFinal(encrypted);
 	
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -62,25 +62,11 @@ public class CipherUtil {
 		return encryptedByteData;
 	}
 	
-	public static byte[] getHash(byte[] _data){
-		MessageDigest md;
-		try {
-			md = MessageDigest.getInstance("SHA-1");
-		} catch (NoSuchAlgorithmException e) {
-			e.printStackTrace();
-			
-			return null;
-		}
-        md.update(_data, 0, _data.length);
-        
-        return md.digest();
-	}
-	
 	public static byte[] signData(byte[] _data, Key _privateKey) {
 		Signature signer;
 		try {
-			signer = Signature.getInstance("SHA1withRSA");
-			signer.initSign((PrivateKey)_privateKey, new SecureRandom()); //Where do you get the key?
+			signer = Signature.getInstance(DEFAULT_SIGNATURE);
+			signer.initSign((PrivateKey)_privateKey, new SecureRandom());
 			signer.update(_data, 0, _data.length);
 			
 			return signer.sign();
@@ -96,7 +82,7 @@ public class CipherUtil {
 	public static boolean verifyData(byte[] _data, byte[] _sigBytes, Key _publicKey){
         Signature signature;
 		try {
-			signature = Signature.getInstance("SHA1withRSA");
+			signature = Signature.getInstance(DEFAULT_SIGNATURE);
 			signature.initVerify((PublicKey) _publicKey);
 	        signature.update(_data);
 	        
