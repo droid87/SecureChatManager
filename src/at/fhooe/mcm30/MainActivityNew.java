@@ -20,6 +20,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 import at.fhooe.mcm30.fragments.ContactsFragment;
+import at.fhooe.mcm30.fragments.ConversationFragment;
 
 public class MainActivityNew extends FragmentActivity implements
 		ActionBar.TabListener {
@@ -38,6 +39,8 @@ public class MainActivityNew extends FragmentActivity implements
 	 * The {@link ViewPager} that will host the section contents.
 	 */
 	ViewPager mViewPager;
+	
+	private ConversationFragment conversationFragment;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -126,17 +129,13 @@ public class MainActivityNew extends FragmentActivity implements
 
 		@Override
 		public Fragment getItem(int position) {
-			// getItem is called to instantiate the fragment for the given page.
-			// Return a DummySectionFragment (defined as a static inner class
-			// below) with the page number as its lone argument.
 			
 			switch (position) {
 			case 0:	return new ContactsFragment();
-			case 1:	Fragment fragment = new DummySectionFragment();
-					Bundle args = new Bundle();
-					args.putInt(DummySectionFragment.ARG_SECTION_NUMBER, position + 1);
-					fragment.setArguments(args);
-					return fragment;
+			case 1:	if(conversationFragment == null) {
+						conversationFragment = new ConversationFragment();
+					}
+					return conversationFragment;
 			}
 			
 			return null;
