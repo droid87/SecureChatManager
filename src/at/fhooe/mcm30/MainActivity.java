@@ -24,11 +24,7 @@ public class MainActivity extends Activity {
 	private TextView mRSADecrypt;
 	private EditText mText;
 	
-	public static SecureChatManager mSecureChatManager;
-	
-	private void initBluetooth() {
-		
-	}
+	public SecureChatManager mSecureChatManager;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -80,8 +76,8 @@ public class MainActivity extends Activity {
 
 			@Override
 			public void onClick(View v) {
-				Intent i = new Intent(MainActivity.this,NFCActivity.class);
-				startActivity(i);				
+//				Intent i = new Intent(MainActivity.this,NFCActivity.class);
+//				startActivity(i);				
 			}
 			
 		});
