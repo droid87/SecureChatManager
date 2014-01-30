@@ -257,18 +257,25 @@ public class SecureChatManager implements SessionKeyExpired {
 		return new SignedSessionKey(encrypted, signature);
 	}
 	
-	public SignedSessionKey decryptSessionKey(int _conversationIndex, SignedSessionKey _signedKey) {
+	public byte[] decryptSessionKey(int _conversationIndex, SignedSessionKey _signedKey) {
 		Conversation conversation = mConversation.get(_conversationIndex);
 		byte[] plain = CipherUtil.decryptRSA(mRSAKeyPair.getPrivateKey(), _signedKey.message);
 		
-//		return new SignedSessionKey(plain, CipherUtil.verifyData(plain, _signedKey.signedHash, conversation.getContact().getPuKey()));
-		return new SignedSessionKey(plain, CipherUtil.verifyData(plain, _signedKey.signedHash, mRSAKeyPair.getPublicKey())); //TODO DEBUGGING
+//		if( CipherUtil.verifyData(plain, _signedKey.signature, converstion.getPublicKey()))
+		if( CipherUtil.verifyData(plain, _signedKey.signature, mRSAKeyPair.getPublicKey()))//TODO DEBUGGING
+			return plain;
+		else
+			return null;
 	}
 	
-	public SignedSessionKey decryptSessionKey(Conversation _conversation, SignedSessionKey _signedKey) {
+	public byte[] decryptSessionKey(Conversation _conversation, SignedSessionKey _signedKey) {
 		byte[] plain = CipherUtil.decryptRSA(mRSAKeyPair.getPrivateKey(), _signedKey.message);
 		
-		return new SignedSessionKey(plain, CipherUtil.verifyData(plain, _signedKey.signedHash, _conversation.getContact().getPuKey()));
+//		if( CipherUtil.verifyData(plain, _signedKey.signature, _converstion.getPublicKey()))
+		if( CipherUtil.verifyData(plain, _signedKey.signature, mRSAKeyPair.getPublicKey()))//TODO DEBUGGING
+			return plain;
+		else
+			return null;
 	}
 
 	@Override

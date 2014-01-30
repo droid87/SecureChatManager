@@ -1,6 +1,5 @@
 package at.fhooe.mcm30;
 
-import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
 
@@ -71,8 +70,8 @@ public class MainActivity extends Activity {
 						Log.e("securiti::", new String(dec));
 						
 						//get decrypted session key
-						SignedSessionKey ssKey = mSecureChatManager.decryptSessionKey(0, sKey);
-						mRSADecrypt.setText(new String(ssKey.message) + " " + ssKey.verified);
+						byte[] sessionKey = mSecureChatManager.decryptSessionKey(0, sKey);
+						mRSADecrypt.setText(new String(sessionKey));
 					}
 
 				});
