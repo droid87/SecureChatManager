@@ -7,7 +7,6 @@ import java.security.NoSuchAlgorithmException;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
-import android.util.Base64;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -27,6 +26,10 @@ public class MainActivity extends Activity {
 	private EditText mText;
 	
 	public static SecureChatManager mSecureChatManager;
+	
+	private void initBluetooth() {
+		
+	}
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -50,7 +53,6 @@ public class MainActivity extends Activity {
 						KeyPairGenerator key=null;
 						try {key = KeyPairGenerator.getInstance("RSA");} catch (NoSuchAlgorithmException e) {}
 						key.initialize(2048);
-						KeyPair pair = key.genKeyPair();
 						
 						Contact testContact = new Contact("MyDick", "BT_MAC", key.genKeyPair().getPublic());
 						mSecureChatManager.addContact(testContact);

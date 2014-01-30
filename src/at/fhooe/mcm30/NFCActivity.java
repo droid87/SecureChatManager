@@ -1,10 +1,10 @@
 package at.fhooe.mcm30;
 
-import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.commons.lang.SerializationUtils;
 
-import android.nfc.FormatException;
 import android.nfc.NdefMessage;
 import android.nfc.NdefRecord;
 import android.nfc.NfcAdapter;
@@ -19,8 +19,9 @@ import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.content.Intent;
 import android.view.Menu;
-import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.widget.ArrayAdapter;
+import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 import at.fhooe.mcm30.concersation.Contact;
@@ -30,6 +31,9 @@ public class NFCActivity extends Activity implements CreateNdefMessageCallback,
 
 	private NfcAdapter mNfcAdapter;
 	private TextView mInfoText;
+	private ListView mLvContacts;
+	private ArrayAdapter<String> mAdapterContacts;
+	private List<String> mListContacts;
 	private static final int MESSAGE_SENT = 1;
 	
 	private Contact myContact = null;
@@ -40,7 +44,12 @@ public class NFCActivity extends Activity implements CreateNdefMessageCallback,
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_nfc);
 
-		mInfoText = (TextView) findViewById(R.id.textView);
+		mInfoText = (TextView) findViewById(R.id.tvInfo);
+		
+		mLvContacts = (ListView)findViewById(R.id.lvContacts);
+		mListContacts = new ArrayList<String>();
+		mAdapterContacts = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1,mListContacts);
+		mLvContacts.setAdapter(mAdapterContacts);
 		
 		BluetoothAdapter btAdapter = BluetoothAdapter.getDefaultAdapter();
 		
@@ -52,13 +61,12 @@ public class NFCActivity extends Activity implements CreateNdefMessageCallback,
 		}
 		
 		myContact = new Contact(name, btAddress, MainActivity.mSecureChatManager.getPublicKey());
-		mInfoText.setText("MyContact:\n\n" + myContact.toString());
+//		mInfoText.setText("MyContact:\n\n" + myContact.toString());
 		
 		// Check for available NFC Adapter
 		mNfcAdapter = NfcAdapter.getDefaultAdapter(this);
 		
 		if (mNfcAdapter == null) {
-			mInfoText = (TextView) findViewById(R.id.textView);
 			mInfoText.setText("NFC is not available on this device.");
 		} else {
 			// Register callback to set NDEF message
@@ -153,7 +161,8 @@ public class NFCActivity extends Activity implements CreateNdefMessageCallback,
         byte[] data = msg.getRecords()[0].getPayload();
         partnerContact = (Contact) SerializationUtils.deserialize(data);
         
-        mInfoText.setText(mInfoText.getText() + "\n\nOther Contact:\n\n" + partnerContact.toString());
+//        mInfoText.setText(mInfoText.getText() + "\n\nOther Contact:\n\n" + partnerContact.toString());
+        mListContacts.add(partnerContact.toString());
     }
 
     @Override
