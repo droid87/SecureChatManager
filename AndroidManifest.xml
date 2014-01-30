@@ -7,9 +7,8 @@
     <uses-sdk
         android:minSdkVersion="16"
         android:targetSdkVersion="19" />
-    
+
     <uses-permission android:name="android.permission.NFC" />
-    
     <uses-permission android:name="android.permission.BLUETOOTH" />
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
 
@@ -21,20 +20,26 @@
         <activity
             android:name="at.fhooe.mcm30.MainActivity"
             android:label="@string/app_name" >
+        </activity>
+        <activity
+            android:name="at.fhooe.mcm30.NFCActivity"
+            android:label="NFC Activity" 
+            android:screenOrientation="portrait">
+            <intent-filter>
+                <action android:name="android.nfc.action.NDEF_DISCOVERED" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+
+                <data android:mimeType="application/at.fhooe.mcm30" />
+            </intent-filter>
+        </activity>
+        <activity
+            android:name="at.fhooe.mcm30.MainActivityNew"
+            android:label="@string/title_activity_main_activity_new" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
-        <activity
-            android:name="at.fhooe.mcm30.NFCActivity"
-            android:label="NFC Activity" >
-            
-            <intent-filter>
-                <action android:name="android.nfc.action.NDEF_DISCOVERED" />
-                <category android:name="android.intent.category.DEFAULT" />
-                <data android:mimeType="application/at.fhooe.mcm30" />
             </intent-filter>
         </activity>
     </application>

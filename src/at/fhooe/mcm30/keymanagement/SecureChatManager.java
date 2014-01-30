@@ -26,6 +26,7 @@ public class SecureChatManager implements SessionKeyExpired {
 	private RSAKeyPair mRSAKeyPair;
 	private Context mContext;
 	
+	private static SecureChatManager instance;
 	
 	public SecureChatManager(Context _context) {
 		mContext = _context;
@@ -37,6 +38,15 @@ public class SecureChatManager implements SessionKeyExpired {
 		if(!loadRSaKey())
 			mRSAKeyPair = new RSAKeyPair();
 	}
+	
+	
+	public static SecureChatManager getInstance(Context context) {
+		if(instance == null) {
+			instance = new SecureChatManager(context);
+		}
+		return instance;
+	}
+	
 	
 	public SecureChatManager(Context _context, int _keySizeRSA) {
 		mContext = _context;
