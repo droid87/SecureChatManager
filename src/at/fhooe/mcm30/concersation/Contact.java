@@ -2,19 +2,26 @@ package at.fhooe.mcm30.concersation;
 
 import java.io.Serializable;
 import java.security.Key;
+import java.security.KeyFactory;
+import java.security.NoSuchAlgorithmException;
+import java.security.spec.InvalidKeySpecException;
+import java.security.spec.X509EncodedKeySpec;
 
 public class Contact implements Serializable {
 	
 	private static final long serialVersionUID = 8100688396248257275L;
 	private String mName;
 	private String mBTAddress;
-	private Key mPublicKey;
+	private transient Key mPublicKey;
+	private byte[] mPublicKeyEncoded;
 	
 	
 	public Contact(String _name, String _btAddress, Key _publicKey) {
 		mName = _name;
 		mBTAddress = _btAddress;
-		mPublicKey = _publicKey;	
+		mPublicKey = _publicKey;
+		
+		mPublicKeyEncoded = mPublicKey.getEncoded();
 	}
 	
 	public String getName() {
@@ -26,6 +33,17 @@ public class Contact implements Serializable {
 	}
 
 	public Key getPuKey() {
+		if (mPublicKey == null && mPublicKeyEncoded != null) {
+			try {
+				X509EncodedKeySpec spec = new X509EncodedKeySpec(mPublicKeyEncoded);
+				KeyFactory fact = KeyFactory.getInstance("RSA");
+				mPublicKey = fact.generatePublic(spec);
+			} catch (NoSuchAlgorithmException e) {
+				e.printStackTrace();
+			} catch (InvalidKeySpecException e) {
+				e.printStackTrace();
+			}
+		}
 		return mPublicKey;
 	}
 	
