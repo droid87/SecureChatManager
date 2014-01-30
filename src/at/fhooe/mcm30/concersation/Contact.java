@@ -16,11 +16,12 @@ public class Contact implements Serializable {
 	private static final long serialVersionUID = 8100688396248257275L;
 	private String mName;
 	private String mBTAddress;
+	private String mWifiMacAddress;
 	private transient Key mPublicKey;
 	private byte[] mPublicKeyEncoded;
 	
 	
-	public Contact(String _name, String _btAddress, Key _publicKey) {
+	public Contact(String _name, String _btAddress, String macAddress, Key _publicKey) {
 		mName = _name;
 		mBTAddress = _btAddress;
 		mPublicKey = _publicKey;
@@ -34,6 +35,10 @@ public class Contact implements Serializable {
 	
 	public String getBTAddress() {
 		return mBTAddress;
+	}
+	
+	public String getWifiMacAddress() {
+		return mWifiMacAddress;
 	}
 
 	public Key getPuKey() {
@@ -57,6 +62,7 @@ public class Contact implements Serializable {
 	public String toString() {
 		return  "Name: " + mName + "\n" +
 				"Bluetooth-MAC: " + mBTAddress + "\n" +
+				"Wifi-MAC: " + mWifiMacAddress + "\n" +
 				"Public-Key: " + getPuKey().toString();
 	}
 }

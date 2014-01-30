@@ -11,6 +11,7 @@ import java.util.List;
 import android.bluetooth.BluetoothAdapter;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.net.wifi.WifiManager;
 import android.preference.PreferenceManager;
 import android.util.Base64;
 import android.util.Log;
@@ -315,7 +316,13 @@ public class SecureChatManager implements SessionKeyExpired {
 		if (bluetoothAdapter != null) {
 			btAdress = bluetoothAdapter.getAddress();
 		}
-		Contact contact = new Contact(name, btAdress, getPublicKey());
+		WifiManager wifiManager = (WifiManager) mContext
+				.getSystemService(Context.WIFI_SERVICE);
+		String macAddress = "";
+		if(wifiManager!=null){
+			macAddress = wifiManager.getConnectionInfo().getMacAddress();
+		}
+		Contact contact = new Contact(name, btAdress, macAddress, getPublicKey());
 		return contact;
 	}
 }
