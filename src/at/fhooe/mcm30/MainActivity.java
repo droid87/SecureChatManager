@@ -27,6 +27,10 @@ public class MainActivity extends Activity {
 	private EditText mText;
 	
 	public static SecureChatManager mSecureChatManager;
+	
+	private void initBluetooth() {
+		
+	}
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
