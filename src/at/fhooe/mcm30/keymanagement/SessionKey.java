@@ -54,7 +54,6 @@ public abstract class SessionKey implements Serializable {
 				in.defaultReadObject();
 				initCipher(mSessionKey);
 			} catch (ClassNotFoundException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 	}
