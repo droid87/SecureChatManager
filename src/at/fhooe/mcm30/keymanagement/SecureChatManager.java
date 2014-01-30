@@ -16,7 +16,6 @@ import at.fhooe.mcm30.concersation.Conversation;
 
 public class SecureChatManager implements SessionKeyExpired {
 	
-	private static final long serialVersionUID = -2674366968374272043L;
 	private static final String RSA_KEY_FILE = "rsa_key";
 	private static final String CONVERSATIONS_FILE = "conversations";
 	private static final String CONTACTS_FILE = "contacts";

@@ -58,8 +58,6 @@ public abstract class SessionKey implements Serializable {
 				e.printStackTrace();
 			}
 	}
-	
-	
 
 	private byte[] createSessionKey() {
 		KeyGenerator keygen;
@@ -104,6 +102,10 @@ public abstract class SessionKey implements Serializable {
 		return mMaxCount;
 	}
 	
+	public void setMaxCount(int _max) {
+		mMaxCount = _max;
+	}
+	
 	public int count() {
 		return mCount;
 	}
@@ -143,8 +145,8 @@ public abstract class SessionKey implements Serializable {
 			mCipher.init(Cipher.DECRYPT_MODE, mSecretKey, new IvParameterSpec(INITIALIZATION_VECTOR));
 			decrypted = mCipher.doFinal(Base64.decode(encrypted, Base64.DEFAULT));
 
-		} catch (Exception e) {
 			e.printStackTrace();
+		} catch (Exception e) {
 		}
 
 		return decrypted;
@@ -157,6 +159,10 @@ public abstract class SessionKey implements Serializable {
 		initCipher(mSessionKey);
 	}
 	
-	abstract public void increaseCount();
-	abstract public void registerExpiredSessionKey(SessionKeyExpired _expired);
+	public void increaseCount() {
+		if(--mCount<0)
+			sessionKeyExpired();
+	}
+	
+	abstract public void sessionKeyExpired();
 }

@@ -1,59 +1,76 @@
 package at.fhooe.mcm30.concersation;
 
-import java.io.IOException;
-import java.io.ObjectOutputStream;
 import java.io.Serializable;
 
 import at.fhooe.mcm30.keymanagement.SessionKey;
 import at.fhooe.mcm30.keymanagement.SessionKeyExpired;
 
-public class Conversation extends SessionKey implements Serializable {
+public class Conversation implements Serializable {
 	
 	private static final long serialVersionUID = 191435905707678967L;
 	private Contact mContact;
+	private SessionKey mSessionKey;
 	private transient SessionKeyExpired mExpired;
 	
 	
-	public void writeObject(ObjectOutputStream out)
-            throws IOException, ClassNotFoundException {
-       out.defaultWriteObject();
-    }
-	
-	
-	 public void readObject(java.io.ObjectInputStream in)
-			  throws IOException {
-		 super.readObject(in);
-//		try {
-//			in.defaultReadObject();
-//			
-//		} catch (ClassNotFoundException e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//		}
-		
-	}
-	
 	public Conversation(Contact _contact) {
 		mContact = _contact;
+		mSessionKey = new SessionKey() {
+			private static final long serialVersionUID = -4609454401908851459L;
+
+			@Override
+			public void sessionKeyExpired() {
+				expired();
+			}
+		};
 	}
 	
 	public Conversation(Contact _contact, int _maxCount) {
 		mContact = _contact;
-		mMaxCount = _maxCount;
+		mSessionKey = new SessionKey(_maxCount) {
+			private static final long serialVersionUID = 5975565014965623139L;
+
+			@Override
+			public void sessionKeyExpired() {
+				expired();
+			}
+		};
+	}
+	
+	private void expired() {
+		if(mExpired!=null)
+			mExpired.sessionKeyExpired(this);
 	}
 	
 	public Contact getContact() {
 		return mContact;
 	}
-
-	@Override
-	public void increaseCount() {
-		if(--mCount<0 && mExpired!=null)
-			mExpired.sessionKeyExpired(this);
+	
+	public byte[] getSessionKey() {
+		return mSessionKey.getSessionKey();
 	}
-
-	@Override
+	
+	public byte[] getSessionKeyBase64() {
+		return mSessionKey.getSessionKeyBase64();
+	}
+	
+	public void initCipher(byte[] _sessionKey) {
+		mSessionKey.initCipher(_sessionKey);
+	}
+	
 	public void registerExpiredSessionKey(SessionKeyExpired _expired) {
 		mExpired = _expired;
+	}
+	
+	public void renewSessionKey()  {
+		mSessionKey.renewSessionKey();
+	}
+	
+	public byte[] encrypt(byte[] _plain) {
+		return mSessionKey.encrypt(_plain);
+	}
+	
+	public byte[] decrypt(byte[] _encrypted) {
+		return mSessionKey.decrypt(_encrypted);
 	}
 }
