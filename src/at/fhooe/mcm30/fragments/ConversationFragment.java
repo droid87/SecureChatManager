@@ -16,7 +16,7 @@ public class ConversationFragment extends Fragment {
 	private View root;
 	
 	private ListView listView;
-	private List<Message> list;
+	private List<ConversationMessage> list;
 	private MessagesAdapter adapter;
 	
 	@Override
@@ -26,25 +26,32 @@ public class ConversationFragment extends Fragment {
 				container, false);		
 		listView = (ListView) root.findViewById(R.id.lst_conversation);
 		
-		list = new Vector<Message>();
+		list = new Vector<ConversationMessage>();
 
 		//TODO: delete when real messages are there
-		Message m = new Message();
-		m.setAuthor("A User");
-		m.setMsg("This is another TestMessage");
-		
-		list.add(m);
-		Message m1 = new Message();
-		m1 = new Message();
-		m1.setAuthor("Anderer User");
-		m1.setMsg("This is a Test-Message");
-		list.add(m1);
+//		Message m = new Message();
+//		m.setAuthor("A User");
+//		m.setMsg("This is another TestMessage");
+//		
+//		list.add(m);
+//		Message m1 = new Message();
+//		m1 = new Message();
+//		m1.setAuthor("Anderer User");
+//		m1.setMsg("This is a Test-Message");
+//		list.add(m1);
 		//TODO: deletion end
+		
+		
 		adapter = new MessagesAdapter(getActivity());
 		adapter.addAll(list);
 		listView.setAdapter(adapter);
 		return root;
 		
+	}
+	
+	public void addMessage(ConversationMessage _message ) {
+		adapter.add(_message);
+		adapter.notifyDataSetChanged();		
 	}
 	
 }

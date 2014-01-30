@@ -30,6 +30,7 @@ import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
+import android.util.Base64;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -39,10 +40,16 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 import at.fhooe.mcm30.bluetooth.BluetoothMain;
+import at.fhooe.mcm30.bluetooth.BluetoothMain.ConnectionThread;
+import at.fhooe.mcm30.bluetooth.Wrapper;
+import at.fhooe.mcm30.bluetooth.Wrapper.MessageCodes;
 import at.fhooe.mcm30.concersation.Contact;
+import at.fhooe.mcm30.concersation.Conversation;
 import at.fhooe.mcm30.fragments.ContactsFragment;
 import at.fhooe.mcm30.fragments.ConversationFragment;
+import at.fhooe.mcm30.fragments.ConversationMessage;
 import at.fhooe.mcm30.keymanagement.SecureChatManager;
+import at.fhooe.mcm30.keymanagement.SignedSessionKey;
 
 public class MainActivityNew extends FragmentActivity implements
 		ActionBar.TabListener, CreateNdefMessageCallback,
@@ -79,6 +86,9 @@ public class MainActivityNew extends FragmentActivity implements
 	
 	//Bluetooth ---------------------------------------------------------------
 	private BluetoothMain mBluetoothMain;
+	private ConnectionThread mBluetoothConnection;
+	
+	private Conversation mCurrentConversation;
 	//----------------------------------------------------------------------------
 
 	@Override
@@ -151,8 +161,90 @@ public class MainActivityNew extends FragmentActivity implements
 		//NFC ---------------------------------------------------------------------
 		
 		//Bluetooth ---------------------------------------------------------------------
-		mBluetoothMain = new BluetoothMain(this);
+		mBluetoothMain = new BluetoothMain(this, mHandler);
 		//Bluetooth ---------------------------------------------------------------------
+	}
+	
+	private Handler mHandler = new Handler(new Handler.Callback() {
+	
+	@Override
+	public boolean handleMessage(Message msg) {
+		switch (msg.what) {
+		case BluetoothMain.SOCKET_CONNECTED:
+			mBluetoothConnection = (ConnectionThread) msg.obj;
+			
+			
+			Toast.makeText(MainActivityNew.this, "socket connected", Toast.LENGTH_LONG).show();
+			
+			Contact myContact = SecureChatManager.getInstance(MainActivityNew.this).getMyContact();
+			Wrapper wrapper = new Wrapper(MessageCodes.CONTACT, myContact);
+			mBluetoothConnection.write(wrapper);
+			break;
+		case BluetoothMain.DATA_RECEIVED:
+			byte[] data = (byte[])msg.obj;
+			
+			Wrapper receivedWrapper = (Wrapper)SerializationUtils.deserialize(data);
+			
+			switch (receivedWrapper.messageCode) {
+			case CONTACT:
+				Contact receivedContact = (Contact)receivedWrapper.messageObject;
+				mCurrentConversation = new Conversation(receivedContact);
+				
+				Toast.makeText(MainActivityNew.this,
+						"received message: " + receivedContact.toString(), Toast.LENGTH_LONG).show();
+				
+				mViewPager.setCurrentItem(1,true);
+				
+				SignedSessionKey signedSessionKey = SecureChatManager.getInstance(MainActivityNew.this).encryptSessionKey(mCurrentConversation);
+				Wrapper sessionKeyWrapper = new Wrapper(MessageCodes.SIGNED_SESSIONKEY, signedSessionKey);
+				mBluetoothConnection.write(sessionKeyWrapper);
+				
+				mCurrentConversation.getSessionKey();
+				
+				break;
+			case SIGNED_SESSIONKEY:
+				SignedSessionKey recSignedSessionKey = (SignedSessionKey)receivedWrapper.messageObject;
+				
+				byte[] sessionKey = SecureChatManager.getInstance(MainActivityNew.this).decryptSessionKey(mCurrentConversation, recSignedSessionKey);
+				
+				if (sessionKey != null) {
+					
+				} else {
+					//TODO: send NACK
+				}
+				break;
+			}
+			
+			
+//			byte[] decrypt = mCurrentConversation.decrypt(data.getBytes());
+//			String decryptedMessage = new String(decrypt);
+			
+//			ConversationMessage message = new ConversationMessage(mCurrentConversation.getContact().getName(), data);
+//			conversationFragment.addMessage(message);
+		}
+		return true;
+	}
+});
+	
+	public BluetoothMain getBluetoothMain() {
+		return mBluetoothMain;
+	}
+	
+	public ConnectionThread getBluetoothConnection() {
+		return mBluetoothConnection;
+	}
+	
+	public ViewPager getViewPager() {
+		return mViewPager;
+	}
+	
+	public void connectBluetooth(Contact _contact) {
+		if (mBluetoothMain != null) {
+			mBluetoothMain.connect(_contact.getBTAddress(), mHandler);
+			
+			mCurrentConversation = new Conversation(_contact);
+			SecureChatManager.getInstance(this).addConversation(mCurrentConversation);
+		}
 	}
 	
 	@Override

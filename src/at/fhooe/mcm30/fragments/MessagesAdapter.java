@@ -9,7 +9,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import at.fhooe.mcm30.R;
 
-public class MessagesAdapter extends ArrayAdapter<Message>{
+public class MessagesAdapter extends ArrayAdapter<ConversationMessage>{
 
 	private Context context;
 	

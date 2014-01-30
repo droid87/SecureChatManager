@@ -10,7 +10,10 @@ import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ListView;
 import android.widget.Toast;
+import at.fhooe.mcm30.MainActivityNew;
 import at.fhooe.mcm30.R;
+import at.fhooe.mcm30.bluetooth.BluetoothMain;
+import at.fhooe.mcm30.concersation.Contact;
 import at.fhooe.mcm30.keymanagement.SecureChatManager;
 
 public class ContactsFragment extends Fragment {
@@ -38,12 +41,11 @@ public class ContactsFragment extends Fragment {
 			@Override
 			public void onItemClick(AdapterView<?> arg0, View arg1, int arg2,
 					long pos) {
-				Toast.makeText(
-						getActivity(),
-						"Contact "
-								+ securityManager.getContacts().get((int) pos)
-										.getName() + " was pressed.",
-						Toast.LENGTH_SHORT).show();
+				Contact contact = securityManager.getContacts().get((int)pos);
+				
+				MainActivityNew myActivity = (MainActivityNew)getActivity();
+				myActivity.getViewPager().setCurrentItem(1, true);
+				myActivity.connectBluetooth(contact);				
 			}
 		});
 

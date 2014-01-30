@@ -25,7 +25,7 @@ public class SecureChatManager implements SessionKeyExpired {
 	private static final String CONTACTS_FILE = "contacts";
 	
 	private List<Contact> mContacts;
-	private List<Conversation> mConversation;
+	private List<Conversation> mConversations;
 	private RSAKeyPair mRSAKeyPair;
 	private Context mContext;
 	
@@ -37,7 +37,7 @@ public class SecureChatManager implements SessionKeyExpired {
 		if(!loadContacts())
 			mContacts = new ArrayList<Contact>();
 		if(!loadConversations())
-			mConversation = new ArrayList<Conversation>();
+			mConversations = new ArrayList<Conversation>();
 		if(!loadRSaKey())
 			mRSAKeyPair = new RSAKeyPair();
 	}
@@ -57,7 +57,7 @@ public class SecureChatManager implements SessionKeyExpired {
 		if(!loadContacts())
 			mContacts = new ArrayList<Contact>();
 		if(!loadConversations())
-			mConversation = new ArrayList<Conversation>();
+			mConversations = new ArrayList<Conversation>();
 		if(!loadRSaKey())
 			mRSAKeyPair = new RSAKeyPair(_keySizeRSA);
 	}
@@ -94,7 +94,7 @@ public class SecureChatManager implements SessionKeyExpired {
 			fis = mContext.openFileInput(CONVERSATIONS_FILE);
 			ois = new ObjectInputStream(fis);
 
-			mConversation = (List<Conversation>) ois.readObject();
+			mConversations = (List<Conversation>) ois.readObject();
 			ois.close();
 			fis.close();
 			
@@ -105,7 +105,7 @@ public class SecureChatManager implements SessionKeyExpired {
 			return false;
 		}
 		
-		for(Conversation con : mConversation) {
+		for(Conversation con : mConversations) {
 			con.initCipher(con.getSessionKey());
 			con.registerExpiredSessionKey(this);
 		}
@@ -143,7 +143,7 @@ public class SecureChatManager implements SessionKeyExpired {
 			fos = mContext.openFileOutput(CONVERSATIONS_FILE, Context.MODE_PRIVATE);
 			oos = new ObjectOutputStream(fos);
 			
-			oos.writeObject(mConversation);
+			oos.writeObject(mConversations);
 			
 			oos.flush();
 			oos.close();
@@ -233,7 +233,7 @@ public class SecureChatManager implements SessionKeyExpired {
 	}
 	
 	public List<Conversation> getConversations() {
-		return mConversation;
+		return mConversations;
 	}
 	
 	public void addContact(Contact _contact) {
@@ -250,12 +250,12 @@ public class SecureChatManager implements SessionKeyExpired {
 	}
 	
 	public void addConversation(Conversation _conversation) {
-		mConversation.add(_conversation);
-		mConversation.get(mConversation.size()-1).registerExpiredSessionKey(this);
+		mConversations.add(_conversation);
+		mConversations.get(mConversations.size()-1).registerExpiredSessionKey(this);
 	}
 	
 	public SignedSessionKey encryptSessionKey(int _conversationIndex) {
-		Conversation conversation = mConversation.get(_conversationIndex);
+		Conversation conversation = mConversations.get(_conversationIndex);
 //		byte[] encrypted = CipherUtil.encryptRSA(conversation.getContact().getPuKey(), conversation.getSessionKeyBase64());
 		byte[] encrypted = CipherUtil.encryptRSA(mRSAKeyPair.getPublicKey(), conversation.getSessionKeyBase64()); //TODO DEBUGGING
 		byte[] signature = CipherUtil.signData(conversation.getSessionKeyBase64(), mRSAKeyPair.getPrivateKey());
@@ -271,7 +271,7 @@ public class SecureChatManager implements SessionKeyExpired {
 	}
 	
 	public byte[] decryptSessionKey(int _conversationIndex, SignedSessionKey _signedKey) {
-		Conversation conversation = mConversation.get(_conversationIndex);
+		Conversation conversation = mConversations.get(_conversationIndex);
 		byte[] plain = CipherUtil.decryptRSA(mRSAKeyPair.getPrivateKey(), _signedKey.message);
 		
 //		if( CipherUtil.verifyData(plain, _signedKey.signature, converstion.getPublicKey()))

@@ -3,7 +3,10 @@ package at.fhooe.mcm30.bluetooth;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.Serializable;
 import java.util.UUID;
+
+import org.apache.commons.lang.SerializationUtils;
 
 import android.os.Bundle;
 import android.os.Handler;
@@ -15,6 +18,7 @@ import android.bluetooth.BluetoothServerSocket;
 import android.bluetooth.BluetoothSocket;
 import android.content.Context;
 import android.content.Intent;
+import android.util.Base64;
 import android.view.Menu;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -27,8 +31,8 @@ public class BluetoothMain {
 	public static final UUID MY_UUID = UUID
 			.fromString("f895eaf0-867f-11e3-baa7-0800200c9a66");
 	
-	private static final int SOCKET_CONNECTED = 1;
-	private static final int DATA_RECEIVED = 2;
+	public static final int SOCKET_CONNECTED = 1;
+	public static final int DATA_RECEIVED = 2;
 	
 	private static final int REQEUEST_ENABLE_BT = 3;
 	private static final int LIST_DEVICE = 4;
@@ -45,7 +49,7 @@ public class BluetoothMain {
 	
 	private Context mContext;
 	
-	public BluetoothMain(Context _context) {
+	public BluetoothMain(Context _context, Handler _handler) {
 		mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
 		mContext = _context;
 		
@@ -57,7 +61,7 @@ public class BluetoothMain {
 			int btState = mBluetoothAdapter.getState();
 			
 			if (btState == BluetoothAdapter.STATE_OFF) {
-				mTvStatus.setText("Bluetooth is off");
+//				mTvStatus.setText("Bluetooth is off");
 				if (!mBluetoothAdapter.isEnabled()) {
 					mBluetoothAdapter.enable();
 //					Intent enableIntent = new Intent(
@@ -65,7 +69,7 @@ public class BluetoothMain {
 //					startActivityForResult(enableIntent, REQEUEST_ENABLE_BT);
 				}
 			} else if (btState == BluetoothAdapter.STATE_ON) {
-				initializeBluetooth();
+				initializeBluetooth(_handler);
 			}
 		}		
 	}
@@ -145,39 +149,43 @@ public class BluetoothMain {
 //			break;
 //		}
 //	}
+	
+	public void connect(String address, Handler handler) {
+		new ConnectThread(address, handler).start();
+	}
 
-	private void initializeBluetooth() {
+	private void initializeBluetooth(Handler handler) {
 //		mTvStatus.setText("Bluetooth is on");
 //		mTvDeviceName.setText("My device name: " +
 //					mBluetoothAdapter.getName() + " (" +
 //					mBluetoothAdapter.getAddress() + ")");
-		new AcceptThread(mHandler).start();
+		new AcceptThread(handler).start();
 	}
 	
-	private Handler mHandler = new Handler(new Handler.Callback() {
-		
-		@Override
-		public boolean handleMessage(Message msg) {
-			switch (msg.what) {
-			case SOCKET_CONNECTED:
-				mBluetoothConnection = (ConnectionThread) msg.obj;
-				BluetoothDevice device = mBluetoothConnection.mmBluetoothSocket
-						.getRemoteDevice();
-				mTvStatus.setText("Connected to " + device.getName() +
-						" (" + device.getAddress() + ")");
-				String hello = "Hello from " + mBluetoothAdapter.getName();
-				mBluetoothConnection.write(hello.getBytes());
-				addNewMessage(mBluetoothAdapter.getName(), hello);
-				break;
-			case DATA_RECEIVED:
-				String data = (String) msg.obj;
-				addNewMessage(mBluetoothConnection.mmBluetoothSocket
-						.getRemoteDevice().getName()
-						, data);
-			}
-			return true;
-		}
-	});
+//	private Handler mHandler = new Handler(new Handler.Callback() {
+//		
+//		@Override
+//		public boolean handleMessage(Message msg) {
+//			switch (msg.what) {
+//			case SOCKET_CONNECTED:
+//				mBluetoothConnection = (ConnectionThread) msg.obj;
+//				BluetoothDevice device = mBluetoothConnection.mmBluetoothSocket
+//						.getRemoteDevice();
+//				mTvStatus.setText("Connected to " + device.getName() +
+//						" (" + device.getAddress() + ")");
+//				String hello = "Hello from " + mBluetoothAdapter.getName();
+//				mBluetoothConnection.write(hello.getBytes());
+//				addNewMessage(mBluetoothAdapter.getName(), hello);
+//				break;
+//			case DATA_RECEIVED:
+//				String data = (String) msg.obj;
+//				addNewMessage(mBluetoothConnection.mmBluetoothSocket
+//						.getRemoteDevice().getName()
+//						, data);
+//			}
+//			return true;
+//		}
+//	});
 	
 	private void addNewMessage(String name, String message) {
 		mTvData.append(name + ": " + message + "\n");
@@ -235,6 +243,10 @@ public class BluetoothMain {
 			}
 		}
 		
+		public BluetoothSocket getBluetoothSocket() {
+			return mmBluetoothSocket;
+		}
+		
 		@Override
 		public void run() {
 			byte[] buffer = new byte[1024];
@@ -242,8 +254,11 @@ public class BluetoothMain {
 			while (true) {
 				try {
 					len = mmInStream.read(buffer);
-					String data = new String(buffer, 0, len);
-					mmHandler.obtainMessage(DATA_RECEIVED, data)
+					byte[] receivedBytes = Base64.decode(buffer, 0);
+					
+//					String data = new String(buffer, 0, len);
+					
+					mmHandler.obtainMessage(DATA_RECEIVED, receivedBytes)
 						.sendToTarget();
 				} catch (IOException e) {
 					e.printStackTrace();
@@ -251,9 +266,12 @@ public class BluetoothMain {
 			}
 		}
 		
-		public void write(byte[] bytes) {
+		public void write(Serializable _object) {
 			try {
-				mmOutStream.write(bytes);
+				byte[] sendBytes = SerializationUtils.serialize(_object);
+				
+				byte[] sendBytesEncoded = Base64.encode(sendBytes, 0);
+				mmOutStream.write(sendBytesEncoded);
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
