@@ -30,6 +30,7 @@ import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -40,6 +41,7 @@ import android.widget.Toast;
 import at.fhooe.mcm30.bluetooth.BluetoothMain;
 import at.fhooe.mcm30.concersation.Contact;
 import at.fhooe.mcm30.fragments.ContactsFragment;
+import at.fhooe.mcm30.fragments.ConversationFragment;
 import at.fhooe.mcm30.keymanagement.SecureChatManager;
 
 public class MainActivityNew extends FragmentActivity implements
@@ -61,6 +63,9 @@ public class MainActivityNew extends FragmentActivity implements
 	 */
 	ViewPager mViewPager;
 	
+
+	private ConversationFragment conversationFragment;
+
 	private ContactsFragment mFragmentContacts;
 
 	//NFC-----------------------------------------------------------------------
@@ -196,9 +201,6 @@ public class MainActivityNew extends FragmentActivity implements
 
 		@Override
 		public Fragment getItem(int position) {
-			// getItem is called to instantiate the fragment for the given page.
-			// Return a DummySectionFragment (defined as a static inner class
-			// below) with the page number as its lone argument.
 
 			switch (position) {
 			case 0:
@@ -210,12 +212,10 @@ public class MainActivityNew extends FragmentActivity implements
 				}
 				return mFragmentContacts;
 			case 1:
-				Fragment fragment = new DummySectionFragment();
-				Bundle args = new Bundle();
-				args.putInt(DummySectionFragment.ARG_SECTION_NUMBER,
-						position + 1);
-				fragment.setArguments(args);
-				return fragment;
+				if(conversationFragment == null) {
+					conversationFragment = new ConversationFragment();
+				}
+				return conversationFragment;
 			}
 
 			return null;
@@ -349,16 +349,10 @@ public class MainActivityNew extends FragmentActivity implements
 		
 		if (partnerContact != null && !SecureChatManager.getInstance(this).isContactInList(partnerContact)) {
 			SecureChatManager.getInstance(this).addContact(partnerContact);
-			
+
 			if (mFragmentContacts != null) {
 				mFragmentContacts.invalidateAdapter();
 			}
 		}
-		
-
-		// mInfoText.setText(mInfoText.getText() + "\n\nOther Contact:\n\n" +
-		// partnerContact.toString());
-
-		// mListContacts.add(partnerContact.toString());
-	}	
+	}
 }

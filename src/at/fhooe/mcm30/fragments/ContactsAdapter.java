@@ -22,6 +22,8 @@ public class ContactsAdapter extends ArrayAdapter<Contact>{
 //	    addAll(contacts);
 	}
 	
+	
+	
 	 @Override
 	  public View getView(int position, View convertView, ViewGroup parent) {
 	    LayoutInflater inflater = (LayoutInflater) context

@@ -11,5 +11,7 @@
     
     <string name="pref_key_name">pref_key_name</string>
     <string name="name">Name</string>
+    
+    <string name="hint_inputMessage">Input your message here</string>
 
 </resources>
