@@ -8,15 +8,18 @@ import java.security.Key;
 import java.util.ArrayList;
 import java.util.List;
 
+import android.bluetooth.BluetoothAdapter;
 import android.content.Context;
+import android.content.SharedPreferences;
+import android.preference.PreferenceManager;
 import android.util.Log;
+import at.fhooe.mcm30.R;
 import at.fhooe.mcm30.concersation.Contact;
 import at.fhooe.mcm30.concersation.Conversation;
 
 
 public class SecureChatManager implements SessionKeyExpired {
 	
-	private static final long serialVersionUID = -2674366968374272043L;
 	private static final String RSA_KEY_FILE = "rsa_key";
 	private static final String CONVERSATIONS_FILE = "conversations";
 	private static final String CONTACTS_FILE = "contacts";
@@ -267,18 +270,25 @@ public class SecureChatManager implements SessionKeyExpired {
 		return new SignedSessionKey(encrypted, signature);
 	}
 	
-	public SignedSessionKey decryptSessionKey(int _conversationIndex, SignedSessionKey _signedKey) {
+	public byte[] decryptSessionKey(int _conversationIndex, SignedSessionKey _signedKey) {
 		Conversation conversation = mConversation.get(_conversationIndex);
 		byte[] plain = CipherUtil.decryptRSA(mRSAKeyPair.getPrivateKey(), _signedKey.message);
 		
-//		return new SignedSessionKey(plain, CipherUtil.verifyData(plain, _signedKey.signedHash, conversation.getContact().getPuKey()));
-		return new SignedSessionKey(plain, CipherUtil.verifyData(plain, _signedKey.signedHash, mRSAKeyPair.getPublicKey())); //TODO DEBUGGING
+//		if( CipherUtil.verifyData(plain, _signedKey.signature, converstion.getPublicKey()))
+		if( CipherUtil.verifyData(plain, _signedKey.signature, mRSAKeyPair.getPublicKey()))//TODO DEBUGGING
+			return plain;
+		else
+			return null;
 	}
 	
-	public SignedSessionKey decryptSessionKey(Conversation _conversation, SignedSessionKey _signedKey) {
+	public byte[] decryptSessionKey(Conversation _conversation, SignedSessionKey _signedKey) {
 		byte[] plain = CipherUtil.decryptRSA(mRSAKeyPair.getPrivateKey(), _signedKey.message);
 		
-		return new SignedSessionKey(plain, CipherUtil.verifyData(plain, _signedKey.signedHash, _conversation.getContact().getPuKey()));
+//		if( CipherUtil.verifyData(plain, _signedKey.signature, _converstion.getPublicKey()))
+		if( CipherUtil.verifyData(plain, _signedKey.signature, mRSAKeyPair.getPublicKey()))//TODO DEBUGGING
+			return plain;
+		else
+			return null;
 	}
 
 	@Override
@@ -288,5 +298,18 @@ public class SecureChatManager implements SessionKeyExpired {
 		
 		//TODO send on other contact
 		//_conversation.getContact().getBTAddress()
+	}
+	
+	public Contact getMyContact() {
+		SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(mContext);
+		String name = sharedPrefs.getString(mContext.getString(R.string.pref_key_name),
+				"-");
+		BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+		String btAdress = "";
+		if (bluetoothAdapter != null) {
+			btAdress = bluetoothAdapter.getAddress();
+		}
+		Contact contact = new Contact(name, btAdress, getPublicKey());
+		return contact;
 	}
 }

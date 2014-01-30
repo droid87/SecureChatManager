@@ -2,7 +2,6 @@ package at.fhooe.mcm30.keymanagement;
 
 import java.io.Serializable;
 import java.security.Key;
-import java.security.KeyFactory;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
