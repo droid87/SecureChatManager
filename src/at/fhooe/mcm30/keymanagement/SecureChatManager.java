@@ -11,6 +11,7 @@ import java.util.List;
 import android.bluetooth.BluetoothAdapter;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.net.wifi.WifiManager;
 import android.preference.PreferenceManager;
 import android.util.Log;
 import at.fhooe.mcm30.R;
@@ -143,8 +144,8 @@ public class SecureChatManager implements SessionKeyExpired {
 		
 		try {
 			fos = mContext.openFileOutput(CONVERSATIONS_FILE, Context.MODE_PRIVATE);
-			oos = new ObjectOutputStream(fos);
 			
+			oos = new ObjectOutputStream(fos);
 			oos.writeObject(mConversations);
 			
 			oos.flush();
@@ -319,7 +320,13 @@ public class SecureChatManager implements SessionKeyExpired {
 		if (bluetoothAdapter != null) {
 			btAdress = bluetoothAdapter.getAddress();
 		}
-		Contact contact = new Contact(name, btAdress, getPublicKey());
+		WifiManager wifiManager = (WifiManager) mContext
+				.getSystemService(Context.WIFI_SERVICE);
+		String wifiMacAddress = "";
+		if(wifiManager!=null){
+			wifiMacAddress = wifiManager.getConnectionInfo().getMacAddress();
+		}
+		Contact contact = new Contact(name, btAdress, wifiMacAddress, getPublicKey());
 		return contact;
 	}
 }

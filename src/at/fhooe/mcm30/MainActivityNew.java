@@ -1,12 +1,35 @@
 package at.fhooe.mcm30;
 
+
+import java.nio.ByteBuffer;
+import java.security.Key;
+import java.util.List;
 import java.util.Locale;
+
+
 import org.apache.commons.lang.SerializationUtils;
 import android.annotation.SuppressLint;
 import android.app.ActionBar;
 import android.app.FragmentTransaction;
 import android.bluetooth.BluetoothAdapter;
+
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
+import android.net.Uri;
+import android.net.wifi.WifiManager;
+import android.net.wifi.WpsInfo;
+import android.net.wifi.p2p.WifiP2pConfig;
+import android.net.wifi.p2p.WifiP2pDevice;
+import android.net.wifi.p2p.WifiP2pDeviceList;
+import android.net.wifi.p2p.WifiP2pInfo;
+import android.net.wifi.p2p.WifiP2pManager;
+import android.net.wifi.p2p.WifiP2pManager.ActionListener;
+import android.net.wifi.p2p.WifiP2pManager.Channel;
+import android.net.wifi.p2p.WifiP2pManager.ChannelListener;
+import android.net.wifi.p2p.WifiP2pManager.ConnectionInfoListener;
+import android.net.wifi.p2p.WifiP2pManager.PeerListListener;
 import android.nfc.NdefMessage;
 import android.nfc.NdefRecord;
 import android.nfc.NfcAdapter;
@@ -40,11 +63,22 @@ import at.fhooe.mcm30.fragments.ContactsFragment;
 import at.fhooe.mcm30.fragments.ConversationFragment;
 import at.fhooe.mcm30.fragments.ConversationMessage;
 import at.fhooe.mcm30.keymanagement.SecureChatManager;
+import at.fhooe.mcm30.keymanagement.RSAKeyPair;
+import at.fhooe.mcm30.keymanagement.SecureChatManager;
+import at.fhooe.mcm30.keymanagement.SessionKey;
 import at.fhooe.mcm30.keymanagement.SignedSessionKey;
+import at.fhooe.mcm30.wifip2p.DeviceActionListener;
+import at.fhooe.mcm30.wifip2p.FileLoadingCompleteListener;
+import at.fhooe.mcm30.wifip2p.FileServerAsyncTask;
+import at.fhooe.mcm30.wifip2p.FileTransferService;
+import at.fhooe.mcm30.wifip2p.MacAddressHelper;
+import at.fhooe.mcm30.wifip2p.WiFiDirectBroadcastReceiver;
+import at.fhooe.mcm30.wifip2p.WifiP2pUtils;
 
 public class MainActivityNew extends FragmentActivity implements
 		ActionBar.TabListener, CreateNdefMessageCallback,
-		OnNdefPushCompleteCallback {
+		OnNdefPushCompleteCallback, ChannelListener, DeviceActionListener,
+		ConnectionInfoListener, FileLoadingCompleteListener, PeerListListener {
 
 	/**
 	 * The {@link android.support.v4.view.PagerAdapter} that will provide
@@ -60,7 +94,6 @@ public class MainActivityNew extends FragmentActivity implements
 	 * The {@link ViewPager} that will host the section contents.
 	 */
 	ViewPager mViewPager;
-	
 
 	private ConversationFragment conversationFragment;
 
@@ -81,6 +114,23 @@ public class MainActivityNew extends FragmentActivity implements
 	
 	private SecureChatManager secureChatManager = null;
 	//----------------------------------------------------------------------------
+	// WifiP2P
+	// ---------------------------------------------------------------------
+	private final IntentFilter mWifiP2pIntentFilter = new IntentFilter();
+
+	private WifiP2pManager mWifiP2pManager;
+	private boolean isWifiP2pEnabled = false;
+	private Channel mWifiP2pChannel;
+	private BroadcastReceiver mWifiP2pReceiver = null;
+	private WifiP2pDevice mWifiDevice;
+	private Uri mWifiP2pImageUri = null;
+	private boolean mWifiP2pDiscoverPeers;
+	private boolean mStartNewWifiP2pConnection;
+	// WifiP2P
+	// ---------------------------------------------------------------------
+
+	// private Conversation mCurrentConversation;
+	private byte[] mSessionKey;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -129,6 +179,14 @@ public class MainActivityNew extends FragmentActivity implements
 		enableBluetooth();
 		
 		//NFC ---------------------------------------------------------------------
+
+		// NFC
+		// ---------------------------------------------------------------------
+		WifiManager wifiManager = (WifiManager) this
+				.getSystemService(Context.WIFI_SERVICE);
+		
+		// mInfoText.setText("MyContact:\n\n" + myContact.toString());
+
 		// Check for available NFC Adapter
 		mNfcAdapter = NfcAdapter.getDefaultAdapter(this);
 
@@ -153,9 +211,14 @@ public class MainActivityNew extends FragmentActivity implements
 		if (btAdapter != null) {
 			btAddress = btAdapter.getAddress();
 		}
-
-		myContact = new Contact(name, btAddress, SecureChatManager.getInstance(
-				this).getPublicKey());
+		WifiManager wifiManager = (WifiManager) this
+				.getSystemService(Context.WIFI_SERVICE);
+		String wifiMacAddress = "";
+		if (wifiManager != null) {
+			wifiMacAddress = wifiManager.getConnectionInfo().getMacAddress();
+		}
+		myContact = new Contact(name, btAddress, wifiMacAddress,
+				SecureChatManager.getInstance(this).getPublicKey());	
 		
 		mBluetoothMain = new BluetoothMain(this, mHandler);
 	}
@@ -228,17 +291,21 @@ public class MainActivityNew extends FragmentActivity implements
 			default:
 				break;
 			}
-			
-			
-//			byte[] decrypt = mCurrentConversation.decrypt(data.getBytes());
-//			String decryptedMessage = new String(decrypt);
-			
-//			ConversationMessage message = new ConversationMessage(mCurrentConversation.getContact().getName(), data);
-//			conversationFragment.addMessage(message);
 		}
-		return true;
+			return true;
+		}
+	});
+
+	@Override
+	public void onActivityResult(int requestCode, int resultCode, Intent data) {
+		// WifiP2P
+		// ---------------------------------------------------------------------
+		if (requestCode == WifiP2pUtils.CHOOSE_FILE_RESULT_CODE && data != null
+				&& data.getData() != null) {
+			mWifiP2pDiscoverPeers = true;
+			mWifiP2pImageUri = data.getData();
+		}
 	}
-});
 	
 	public BluetoothMain getBluetoothMain() {
 		return mBluetoothMain;
@@ -283,8 +350,19 @@ public class MainActivityNew extends FragmentActivity implements
 	
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
-		if(item.getItemId() == R.id.action_settings) {
+		switch (item.getItemId()) {
+		case R.id.action_settings:
 			startActivity(new Intent(this, SettingsActivity.class));
+			return true;
+		case R.id.action_gallery:
+			if (!isWifiP2pEnabled) {
+				Toast.makeText(MainActivityNew.this, "Enable WiFi!",
+						Toast.LENGTH_SHORT).show();
+				return true;
+			}
+			Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+			intent.setType("image/*");
+			startActivityForResult(intent, WifiP2pUtils.CHOOSE_FILE_RESULT_CODE);
 			return true;
 		}
 		return false;
@@ -450,6 +528,30 @@ public class MainActivityNew extends FragmentActivity implements
 		if (NfcAdapter.ACTION_NDEF_DISCOVERED.equals(getIntent().getAction())) {
 			processIntent(getIntent());
 		}
+
+		// WifiP2P
+		// ---------------------------------------------------------------------
+		if (mWifiP2pDiscoverPeers) {
+			mStartNewWifiP2pConnection = true;
+			discoverWifiP2pPeers();
+			mWifiP2pDiscoverPeers = false;
+		}
+		Log.i("onResume", "onResume");
+		mWifiP2pReceiver = new WiFiDirectBroadcastReceiver(mWifiP2pManager,
+				mWifiP2pChannel, this);
+		registerReceiver(mWifiP2pReceiver, mWifiP2pIntentFilter);
+		// WifiP2P
+		// ---------------------------------------------------------------------
+	}
+
+	@Override
+	protected void onPause() {
+		super.onPause();
+		// WifiP2P
+		// ---------------------------------------------------------------------
+		unregisterReceiver(mWifiP2pReceiver);
+		// WifiP2P
+		// ---------------------------------------------------------------------
 	}
 
 	@Override
@@ -473,8 +575,10 @@ public class MainActivityNew extends FragmentActivity implements
 
 		byte[] data = msg.getRecords()[0].getPayload();
 		partnerContact = (Contact) SerializationUtils.deserialize(data);
-		
-		if (partnerContact != null && !SecureChatManager.getInstance(this).isContactInList(partnerContact)) {
+
+		if (partnerContact != null
+				&& !SecureChatManager.getInstance(this).isContactInList(
+						partnerContact)) {
 			secureChatManager.addContact(partnerContact);
 			Log.d("test","count: " + secureChatManager.getContacts().size());
 
@@ -486,4 +590,167 @@ public class MainActivityNew extends FragmentActivity implements
 			connectBluetooth(partnerContact);
 		}
 	}
+
+	// WifiP2P
+	// -----------------------------------------------------------------
+	private void startNewWifiP2pConnection() {
+		SecureChatManager secureChatManager = SecureChatManager
+				.getInstance(getApplicationContext());
+		List<Conversation> conversations = secureChatManager.getConversations();
+		if (!conversations.isEmpty()) {
+			String macAddress = conversations.get(0).getContact()
+					.getWifiMacAddress();
+			WifiP2pConfig config = new WifiP2pConfig();
+			config.groupOwnerIntent = 0;
+			mWifiDevice = new WifiP2pDevice();
+			// config.deviceAddress = "04:46:65:FD:93:78";
+			// config.deviceAddress = "CC:3A:61:82:EC:D9";
+			config.deviceAddress = MacAddressHelper
+					.changeMacAddress(macAddress);
+			mWifiDevice.deviceAddress = config.deviceAddress;
+			config.wps.setup = WpsInfo.PBC;
+			connect(config);
+		}
+	}
+
+	public void discoverWifiP2pPeers() {
+		mWifiP2pChannel = mWifiP2pManager.initialize(this, getMainLooper(),
+				null);
+		mWifiP2pManager.discoverPeers(mWifiP2pChannel, null);
+	}
+
+	@Override
+	public void onFileLoadingComplete(String fileName) {
+		disconnect();
+		Intent intent = new Intent();
+		intent.setAction(android.content.Intent.ACTION_VIEW);
+		intent.setDataAndType(Uri.parse("file://" + fileName), "image/*");
+		this.startActivityForResult(intent, WifiP2pUtils.SHOW_FILE_RESULT_CODE);
+	}
+
+	@Override
+	public void onConnectionInfoAvailable(final WifiP2pInfo info) {
+		if (info.groupFormed && info.isGroupOwner) {
+			new FileServerAsyncTask(this, this).execute();
+		} else if (info.groupFormed && mWifiP2pImageUri != null) {
+			// The other device acts as the client
+			Log.d(WifiP2pUtils.TAG, "Intent----------- " + mWifiP2pImageUri);
+			Intent serviceIntent = new Intent(this, FileTransferService.class);
+			serviceIntent.setAction(FileTransferService.ACTION_SEND_FILE);
+			serviceIntent.putExtra(FileTransferService.EXTRAS_FILE_PATH,
+					mWifiP2pImageUri.toString());
+			serviceIntent.putExtra(
+					FileTransferService.EXTRAS_GROUP_OWNER_ADDRESS,
+					info.groupOwnerAddress.getHostAddress());
+			serviceIntent.putExtra(FileTransferService.EXTRAS_GROUP_OWNER_PORT,
+					8988);
+			this.startService(serviceIntent);
+		}
+	}
+
+	@Override
+	public void onPeersAvailable(WifiP2pDeviceList peerList) {
+		if (mStartNewWifiP2pConnection) {
+			mStartNewWifiP2pConnection = false;
+			startNewWifiP2pConnection();
+		}
+	}
+
+	/**
+	 * @param isWifiP2pEnabled
+	 *            the isWifiP2pEnabled to set
+	 */
+	public void setIsWifiP2pEnabled(boolean isWifiP2pEnabled) {
+		this.isWifiP2pEnabled = isWifiP2pEnabled;
+	}
+
+	@Override
+	public void connect(WifiP2pConfig config) {
+		mWifiP2pManager.connect(mWifiP2pChannel, config, new ActionListener() {
+
+			@Override
+			public void onSuccess() {
+				// WiFiDirectBroadcastReceiver will notify us
+			}
+
+			@Override
+			public void onFailure(int reason) {
+				Toast.makeText(MainActivityNew.this, "Connect failed. Retry.",
+						Toast.LENGTH_SHORT).show();
+			}
+		});
+	}
+
+	@Override
+	public void disconnect() {
+		mWifiP2pManager.removeGroup(mWifiP2pChannel, new ActionListener() {
+
+			@Override
+			public void onFailure(int reasonCode) {
+				Log.d(WifiP2pUtils.TAG, "Disconnect failed. Reason :"
+						+ reasonCode);
+
+			}
+
+			@Override
+			public void onSuccess() {
+			}
+
+		});
+	}
+
+	@Override
+	public void onChannelDisconnected() {
+		mWifiP2pManager.removeGroup(mWifiP2pChannel, new ActionListener() {
+
+			@Override
+			public void onFailure(int reasonCode) {
+				Log.d(WifiP2pUtils.TAG, "Disconnect failed. Reason :"
+						+ reasonCode);
+
+			}
+
+			@Override
+			public void onSuccess() {
+			}
+
+		});
+	}
+
+	@Override
+	public void cancelDisconnect() {
+		if (mWifiP2pManager != null) {
+			if (mWifiDevice == null
+					|| mWifiDevice.status == WifiP2pDevice.CONNECTED) {
+				disconnect();
+			} else if (mWifiDevice.status == WifiP2pDevice.AVAILABLE
+					|| mWifiDevice.status == WifiP2pDevice.INVITED) {
+
+				mWifiP2pManager.cancelConnect(mWifiP2pChannel,
+						new ActionListener() {
+
+							@Override
+							public void onSuccess() {
+								Toast.makeText(MainActivityNew.this,
+										"Aborting connection",
+										Toast.LENGTH_SHORT).show();
+							}
+
+							@Override
+							public void onFailure(int reasonCode) {
+								Toast.makeText(
+										MainActivityNew.this,
+										"Connect abort request failed. Reason Code: "
+												+ reasonCode,
+										Toast.LENGTH_SHORT).show();
+							}
+						});
+			}
+		}
+
+	}
+
+	// WifiP2P
+	// ---------------------------------------------------------------------
+
 }
