@@ -1,5 +1,6 @@
 package at.fhooe.mcm30.wifip2p;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -8,17 +9,19 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 
+import org.apache.commons.io.IOUtils;
+
 import android.content.Context;
 import android.os.AsyncTask;
 import android.os.Environment;
 import android.util.Log;
+import at.fhooe.mcm30.keymanagement.SecureChatManager;
 
 /**
- * A simple server socket that accepts connection and writes some data on
- * the stream.
+ * A simple server socket that accepts connection and writes some data on the
+ * stream.
  */
-public class FileServerAsyncTask extends
-		AsyncTask<Void, Void, String> {
+public class FileServerAsyncTask extends AsyncTask<Void, Void, String> {
 
 	private Context context;
 	private ArrayList<FileLoadingCompleteListener> mListener;
@@ -44,19 +47,21 @@ public class FileServerAsyncTask extends
 			Log.d(WifiP2pUtils.TAG, "Server: Socket opened");
 			Socket client = serverSocket.accept();
 			Log.d(WifiP2pUtils.TAG, "Server: connection done");
-			final File f = new File(
-					Environment.getExternalStorageDirectory() + "/"
-							+ context.getPackageName() + "/wifip2pshared-"
-							+ System.currentTimeMillis() + ".jpg");
+			final File f = new File(Environment.getExternalStorageDirectory()
+					+ "/" + context.getPackageName() + "/wifip2pshared-"
+					+ System.currentTimeMillis() + ".jpg");
 
 			File dirs = new File(f.getParent());
 			if (!dirs.exists())
 				dirs.mkdirs();
 			f.createNewFile();
 
-			Log.d(WifiP2pUtils.TAG,
-					"server: copying files " + f.toString());
+			Log.d(WifiP2pUtils.TAG, "server: copying files " + f.toString());
 			InputStream inputstream = client.getInputStream();
+			byte[] bytes = IOUtils.toByteArray(inputstream);
+			bytes = SecureChatManager.getInstance(context).getConversations()
+					.get(0).decrypt(bytes);
+			inputstream = new ByteArrayInputStream(bytes);
 			CopyFileHelper.copyFile(inputstream, new FileOutputStream(f));
 			serverSocket.close();
 			return f.getAbsolutePath();

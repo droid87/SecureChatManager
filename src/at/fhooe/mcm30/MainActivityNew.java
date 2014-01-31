@@ -1,6 +1,8 @@
 package at.fhooe.mcm30;
 
+import java.nio.ByteBuffer;
 import java.security.Key;
+import java.util.List;
 import java.util.Locale;
 
 import org.apache.commons.lang.SerializationUtils;
@@ -57,7 +59,9 @@ import at.fhooe.mcm30.concersation.Conversation;
 import at.fhooe.mcm30.fragments.ContactsFragment;
 import at.fhooe.mcm30.fragments.ConversationFragment;
 import at.fhooe.mcm30.fragments.ConversationMessage;
+import at.fhooe.mcm30.keymanagement.RSAKeyPair;
 import at.fhooe.mcm30.keymanagement.SecureChatManager;
+import at.fhooe.mcm30.keymanagement.SessionKey;
 import at.fhooe.mcm30.keymanagement.SignedSessionKey;
 import at.fhooe.mcm30.wifip2p.DeviceActionListener;
 import at.fhooe.mcm30.wifip2p.FileLoadingCompleteListener;
@@ -226,31 +230,13 @@ public class MainActivityNew extends FragmentActivity implements
 		mWifiP2pManager = (WifiP2pManager) getSystemService(Context.WIFI_P2P_SERVICE);
 		mWifiP2pChannel = mWifiP2pManager.initialize(this, getMainLooper(),
 				null);
-
-		// TODO: uncomment, just for testing
-		Conversation conversation = new Conversation(new Contact("Joe", "",
-				"04:46:65:FD:93:78", new Key() {
-
-					@Override
-					public String getFormat() {
-						// TODO Auto-generated method stub
-						return null;
-					}
-
-					@Override
-					public byte[] getEncoded() {
-						// TODO Auto-generated method stub
-						return null;
-					}
-
-					@Override
-					public String getAlgorithm() {
-						// TODO Auto-generated method stub
-						return null;
-					}
-				}));
-		SecureChatManager.getInstance(getApplicationContext()).addConversation(
-				conversation);
+		
+		// just for testing
+//		Contact contact = new Contact("test", "456", "04:46:65:FD:93:78", new RSAKeyPair().getPublicKey());
+//		Conversation conversation = new Conversation(contact,new byte[]{0x01,0x02,0x03,0x04,0x05,0x06,0x07,0x08,0x09,0x01,0x02,0x03,0x04,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x01,0x02,0x03,0x04,0x00,0x00,0x00});
+//		SecureChatManager.getInstance(getApplicationContext()).addContact(contact);
+//		SecureChatManager.getInstance(getApplicationContext()).addConversation(conversation);
+		
 		// WifiP2P
 		// ---------------------------------------------------------------------
 	}
@@ -435,14 +421,14 @@ public class MainActivityNew extends FragmentActivity implements
 
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
-		switch(item.getItemId()){
+		switch (item.getItemId()) {
 		case R.id.action_settings:
 			startActivity(new Intent(this, SettingsActivity.class));
 			return true;
 		case R.id.action_gallery:
 			if (!isWifiP2pEnabled) {
-				Toast.makeText(MainActivityNew.this,
-						"Enable WiFi!", Toast.LENGTH_SHORT).show();
+				Toast.makeText(MainActivityNew.this, "Enable WiFi!",
+						Toast.LENGTH_SHORT).show();
 				return true;
 			}
 			Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
@@ -612,7 +598,7 @@ public class MainActivityNew extends FragmentActivity implements
 		if (NfcAdapter.ACTION_NDEF_DISCOVERED.equals(getIntent().getAction())) {
 			processIntent(getIntent());
 		}
-		
+
 		// WifiP2P
 		// ---------------------------------------------------------------------
 		if (mWifiP2pDiscoverPeers) {
@@ -620,7 +606,7 @@ public class MainActivityNew extends FragmentActivity implements
 			discoverWifiP2pPeers();
 			mWifiP2pDiscoverPeers = false;
 		}
-		Log.i("onResume","onResume");
+		Log.i("onResume", "onResume");
 		mWifiP2pReceiver = new WiFiDirectBroadcastReceiver(mWifiP2pManager,
 				mWifiP2pChannel, this);
 		registerReceiver(mWifiP2pReceiver, mWifiP2pIntentFilter);
@@ -674,19 +660,23 @@ public class MainActivityNew extends FragmentActivity implements
 	// WifiP2P
 	// -----------------------------------------------------------------
 	private void startNewWifiP2pConnection() {
-		WifiP2pConfig config = new WifiP2pConfig();
-		config.groupOwnerIntent = 0;
-		mWifiDevice = new WifiP2pDevice();
-		// config.deviceAddress = "04:46:65:FD:93:78";
-		// config.deviceAddress = "CC:3A:61:82:EC:D9";
 		SecureChatManager secureChatManager = SecureChatManager
 				.getInstance(getApplicationContext());
-		String macAddress = secureChatManager.getConversations().get(0)
-				.getContact().getWifiMacAddress();
-		config.deviceAddress = MacAddressHelper.changeMacAddress(macAddress);
-		mWifiDevice.deviceAddress = config.deviceAddress;
-		config.wps.setup = WpsInfo.PBC;
-		connect(config);
+		List<Conversation> conversations = secureChatManager.getConversations();
+		if (!conversations.isEmpty()) {
+			String macAddress = conversations.get(0).getContact()
+					.getWifiMacAddress();
+			WifiP2pConfig config = new WifiP2pConfig();
+			config.groupOwnerIntent = 0;
+			mWifiDevice = new WifiP2pDevice();
+			// config.deviceAddress = "04:46:65:FD:93:78";
+			// config.deviceAddress = "CC:3A:61:82:EC:D9";
+			config.deviceAddress = MacAddressHelper
+					.changeMacAddress(macAddress);
+			mWifiDevice.deviceAddress = config.deviceAddress;
+			config.wps.setup = WpsInfo.PBC;
+			connect(config);
+		}
 	}
 
 	public void discoverWifiP2pPeers() {

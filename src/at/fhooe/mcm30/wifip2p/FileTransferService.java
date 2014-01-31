@@ -8,13 +8,17 @@ import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.util.Log;
+import at.fhooe.mcm30.keymanagement.SecureChatManager;
 
+import java.io.ByteArrayInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.net.Socket;
+
+import org.apache.commons.io.IOUtils;
 
 /**
  * A service that process each file transfer request i.e Intent by opening a
@@ -64,6 +68,9 @@ public class FileTransferService extends IntentService {
                 } catch (FileNotFoundException e) {
                     Log.d(WifiP2pUtils.TAG, e.toString());
                 }
+                byte[] bytes = IOUtils.toByteArray(is);
+                bytes = SecureChatManager.getInstance(getApplicationContext()).getConversations().get(0).encrypt(bytes);
+                is = new ByteArrayInputStream(bytes);
                 CopyFileHelper.copyFile(is, stream);
                 Log.d(WifiP2pUtils.TAG, "Client: Data written");
             } catch (IOException e) {
