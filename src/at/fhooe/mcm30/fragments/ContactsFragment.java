@@ -1,6 +1,5 @@
 package at.fhooe.mcm30.fragments;
 
-import android.nfc.NfcAdapter;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
@@ -9,17 +8,12 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ListView;
-import android.widget.Toast;
 import at.fhooe.mcm30.MainActivityNew;
 import at.fhooe.mcm30.R;
-import at.fhooe.mcm30.bluetooth.BluetoothMain;
 import at.fhooe.mcm30.concersation.Contact;
 import at.fhooe.mcm30.keymanagement.SecureChatManager;
 
 public class ContactsFragment extends Fragment {
-
-	private NfcAdapter mNfcAdapter;
-	private static final int MESSAGE_SENT = 1;
 
 	private ListView listView;
 	private ContactsAdapter adapter;
@@ -48,7 +42,7 @@ public class ContactsFragment extends Fragment {
 				
 				MainActivityNew myActivity = (MainActivityNew)getActivity();
 				myActivity.getViewPager().setCurrentItem(1, true);
-				myActivity.connectBluetooth(contact);				
+				myActivity.connectBluetooth(contact);
 			}
 		});
 

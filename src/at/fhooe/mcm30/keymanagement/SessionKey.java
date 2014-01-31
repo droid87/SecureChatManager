@@ -12,13 +12,12 @@ import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 
 import android.util.Base64;
-import android.util.Log;
 
 public abstract class SessionKey implements Serializable {
 
 	private static final long serialVersionUID = -4068275809337954214L;
 	private static final int DEFAULT_KEY_LENGTH = 256;
-	public static final int DEFAULT_MAX_COUNT = 3;
+	public static final int DEFAULT_MAX_COUNT = 1000;
 	private static final byte[] INITIALIZATION_VECTOR = new byte[] {0x00, 0x01, 0x02, 0x03,
 		0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f};
 	
@@ -32,21 +31,21 @@ public abstract class SessionKey implements Serializable {
 	public SessionKey() {
 		mMaxCount = DEFAULT_MAX_COUNT;
 		mSessionKey = createSessionKey();
-		Log.i("FUD", "DEFAULTCONST");
+		
 		initCipher(mSessionKey);
 	}
 	
 	public SessionKey(byte[] _sessionKey) {
 		mMaxCount = DEFAULT_MAX_COUNT;
 		mSessionKey = _sessionKey;
-		Log.i("FUD", "SESSIONKEY");
+		
 		initCipher(mSessionKey);
 	}
 	
 	public SessionKey(int _maxCount) {
 		mMaxCount = _maxCount;
 		mSessionKey = createSessionKey();
-		Log.i("FUD", "CONST_COUNT");
+		
 		initCipher(mSessionKey);
 	}
 	
@@ -67,7 +66,6 @@ public abstract class SessionKey implements Serializable {
 	}
 
 	private byte[] createSessionKey() {
-		Log.i("FUD", "JEZ");
 		KeyGenerator keygen;
 		SecureRandom rand;
 		
@@ -91,7 +89,7 @@ public abstract class SessionKey implements Serializable {
 		try {
 			
 			mSecretKey = new SecretKeySpec(_sessionKey, "AES");
-			mCipher = Cipher.getInstance("AES/ECB/ZeroBytePadding");
+			mCipher = Cipher.getInstance("AES/CFB8/NoPadding");
 			
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -129,7 +127,7 @@ public abstract class SessionKey implements Serializable {
 		byte[] encrypted = null;
 
 		try {
-			mCipher.init(Cipher.ENCRYPT_MODE, mSecretKey);
+			mCipher.init(Cipher.ENCRYPT_MODE, mSecretKey, new IvParameterSpec(INITIALIZATION_VECTOR));
 			encrypted = mCipher.doFinal(plain);
 
 		} catch (Exception e) {
@@ -137,7 +135,7 @@ public abstract class SessionKey implements Serializable {
 			return null;
 		}
 
-		return encrypted;
+		return Base64.encode(encrypted, 0);
 	}
 
 	/**
@@ -150,8 +148,8 @@ public abstract class SessionKey implements Serializable {
 		byte[] decrypted = null;
 
 		try {
-			mCipher.init(Cipher.DECRYPT_MODE, mSecretKey);
-			decrypted = mCipher.doFinal(encrypted);
+			mCipher.init(Cipher.DECRYPT_MODE, mSecretKey, new IvParameterSpec(INITIALIZATION_VECTOR));
+			decrypted = mCipher.doFinal(Base64.decode(encrypted, 0));
 
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -162,7 +160,7 @@ public abstract class SessionKey implements Serializable {
 	
 	public void renewSessionKey() {
 		mCount = 0;
-		Log.i("FUD", "RENEW");
+		
 		mSessionKey = createSessionKey();
 		initCipher(mSessionKey);
 	}

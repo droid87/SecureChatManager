@@ -5,7 +5,6 @@ import java.util.Vector;
 
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -48,24 +47,11 @@ public class ConversationFragment extends Fragment {
 				MainActivityNew myActivity = (MainActivityNew)getActivity();
 				ConversationMessage msg = new ConversationMessage(SecureChatManager.getInstance(getActivity()).getMyContact().getName(), editTextMessage.getText().toString());
 				addMessage(msg);
-				Log.e("test", "Sent new Message: " + msg.getMsg());
+				
+				editTextMessage.setText("");
 				myActivity.sendMessage(editTextMessage.getText().toString());
 			}
 		});
-
-		//TODO: delete when real messages are there
-//		Message m = new Message();
-//		m.setAuthor("A User");
-//		m.setMsg("This is another TestMessage");
-//		
-//		list.add(m);
-//		Message m1 = new Message();
-//		m1 = new Message();
-//		m1.setAuthor("Anderer User");
-//		m1.setMsg("This is a Test-Message");
-//		list.add(m1);
-		//TODO: deletion end
-		
 		
 		adapter = new MessagesAdapter(getActivity());
 		adapter.addAll(list);
@@ -78,5 +64,4 @@ public class ConversationFragment extends Fragment {
 		adapter.add(_message);
 		adapter.notifyDataSetChanged();		
 	}
-	
 }

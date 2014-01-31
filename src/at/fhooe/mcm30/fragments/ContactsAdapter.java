@@ -7,7 +7,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
-import android.widget.ImageView;
 import android.widget.TextView;
 import at.fhooe.mcm30.R;
 import at.fhooe.mcm30.concersation.Contact;
@@ -19,10 +18,7 @@ public class ContactsAdapter extends ArrayAdapter<Contact>{
 	public ContactsAdapter(Context context, List<Contact> contacts) {
 		super(context, R.layout.list_item, contacts);
 	    this.context = context;
-//	    addAll(contacts);
 	}
-	
-	
 	
 	 @Override
 	  public View getView(int position, View convertView, ViewGroup parent) {

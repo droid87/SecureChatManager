@@ -7,9 +7,6 @@ import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.X509EncodedKeySpec;
 
-import android.util.Base64;
-import android.util.Log;
-
 
 public class Contact implements Serializable {
 	

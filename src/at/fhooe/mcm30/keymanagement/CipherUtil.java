@@ -8,12 +8,10 @@ import java.security.Signature;
 
 import javax.crypto.Cipher;
 
-import android.util.Base64;
-
 public class CipherUtil {
 
 	private static final String DEFAULT_SIGNATURE = "SHA256withRSA";
-	private static final String DEFAULT_RSA_CRYPTO = "RSA/ECB/PKCS1Padding";
+	public static final String DEFAULT_RSA_CRYPTO = "RSA/ECB/PKCS1Padding";
 	
 	/**
 	 * encrypt the plaintext with the RSA key

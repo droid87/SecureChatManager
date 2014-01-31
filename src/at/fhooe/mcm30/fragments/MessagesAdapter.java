@@ -5,7 +5,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
-import android.widget.ImageView;
 import android.widget.TextView;
 import at.fhooe.mcm30.R;
 
@@ -27,12 +26,9 @@ public class MessagesAdapter extends ArrayAdapter<ConversationMessage>{
 	    
 	    TextView textViewName = (TextView) rowView.findViewById(R.id.conversation_list_item_name);
 	    TextView textViewText = (TextView) rowView.findViewById(R.id.conversation_list_item_text);
-	    ImageView imageView = (ImageView) rowView.findViewById(R.id.conversation_list_item_image);
-	    imageView.setVisibility(View.INVISIBLE);
 	    
 	    textViewName.setText(getItem(position).getAuthor() + ":");
-	    textViewText.setText(getItem(position).getMsg());	    	    
-	    imageView.setImageResource(R.drawable.camera_icon);
+	    textViewText.setText(getItem(position).getMsg());
 	    
 	    return rowView;
 	  }

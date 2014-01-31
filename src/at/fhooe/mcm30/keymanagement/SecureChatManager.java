@@ -12,7 +12,6 @@ import android.bluetooth.BluetoothAdapter;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
-import android.util.Base64;
 import android.util.Log;
 import at.fhooe.mcm30.R;
 import at.fhooe.mcm30.concersation.Contact;
@@ -43,7 +42,6 @@ public class SecureChatManager implements SessionKeyExpired {
 			mRSAKeyPair = new RSAKeyPair();
 			storeRSAKey();
 		}
-			
 	}
 	
 	
@@ -63,7 +61,10 @@ public class SecureChatManager implements SessionKeyExpired {
 		if(!loadConversations())
 			mConversations = new ArrayList<Conversation>();
 		if(!loadRSaKey())
+		{
 			mRSAKeyPair = new RSAKeyPair(_keySizeRSA);
+			storeRSAKey();
+		}
 	}
 	
 	@SuppressWarnings("unchecked")
@@ -80,7 +81,6 @@ public class SecureChatManager implements SessionKeyExpired {
 			fis.close();
 			
 		} catch (Exception e) {
-			e.printStackTrace();
 			Log.w(SecureChatManager.class.getName(), "cant load conversations");
 			
 			return false;
@@ -103,7 +103,6 @@ public class SecureChatManager implements SessionKeyExpired {
 			fis.close();
 			
 		} catch (Exception e) {
-			e.printStackTrace();
 			Log.w(SecureChatManager.class.getName(), "cant load conversations");
 			
 			return false;
@@ -130,7 +129,6 @@ public class SecureChatManager implements SessionKeyExpired {
 			fis.close();
 			
 		} catch (Exception e) {
-			e.printStackTrace();
 			Log.w(SecureChatManager.class.getName(), "cant load RSA key");
 			
 			return false;
@@ -178,7 +176,6 @@ public class SecureChatManager implements SessionKeyExpired {
 			fos.close();
 			
 		} catch (Exception e) {
-			e.printStackTrace();
 			Log.w(SecureChatManager.class.getName(), "cant store contacts");
 			
 			return false;
@@ -202,7 +199,6 @@ public class SecureChatManager implements SessionKeyExpired {
 			fos.close();
 			
 		} catch (Exception e) {
-			e.printStackTrace();
 			Log.w(SecureChatManager.class.getName(), "cant store rsa key");
 			
 			return false;
@@ -255,9 +251,20 @@ public class SecureChatManager implements SessionKeyExpired {
 	}
 	
 	public void addConversation(Conversation _conversation) {
+		if(isConversationInList(_conversation))
+			return;
+		
 		mConversations.add(_conversation);
-		mConversations.get(mConversations.size()-1).registerExpiredSessionKey(this);
 		storeConversations();
+	}
+	
+	public boolean isConversationInList(Conversation _conv) {
+		for (Conversation conv : mConversations) {
+			if (conv.getContact().getBTAddress().equalsIgnoreCase(conv.getContact().getBTAddress())) {
+				return true;
+			}
+		}
+		return false;
 	}
 	
 	public SignedSessionKey encryptSessionKey(int _conversationIndex) {
@@ -301,9 +308,6 @@ public class SecureChatManager implements SessionKeyExpired {
 	public void sessionKeyExpired(Conversation _conversation) {
 		//renew session key
 		_conversation.renewSessionKey();
-		
-		//TODO send on other contact
-		//_conversation.getContact().getBTAddress()
 	}
 	
 	public Contact getMyContact() {
