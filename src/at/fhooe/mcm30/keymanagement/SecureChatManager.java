@@ -146,8 +146,8 @@ public class SecureChatManager implements SessionKeyExpired {
 		
 		try {
 			fos = mContext.openFileOutput(CONVERSATIONS_FILE, Context.MODE_PRIVATE);
-			oos = new ObjectOutputStream(fos);
 			
+			oos = new ObjectOutputStream(fos);
 			oos.writeObject(mConversations);
 			
 			oos.flush();
@@ -318,11 +318,11 @@ public class SecureChatManager implements SessionKeyExpired {
 		}
 		WifiManager wifiManager = (WifiManager) mContext
 				.getSystemService(Context.WIFI_SERVICE);
-		String macAddress = "";
+		String wifiMacAddress = "";
 		if(wifiManager!=null){
-			macAddress = wifiManager.getConnectionInfo().getMacAddress();
+			wifiMacAddress = wifiManager.getConnectionInfo().getMacAddress();
 		}
-		Contact contact = new Contact(name, btAdress, macAddress, getPublicKey());
+		Contact contact = new Contact(name, btAdress, wifiMacAddress, getPublicKey());
 		return contact;
 	}
 }

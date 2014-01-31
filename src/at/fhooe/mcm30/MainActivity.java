@@ -49,7 +49,7 @@ public class MainActivity extends Activity {
 						try {key = KeyPairGenerator.getInstance("RSA");} catch (NoSuchAlgorithmException e) {}
 						key.initialize(2048);
 						
-						Contact testContact = new Contact("MyDick", "BT_MAC", key.genKeyPair().getPublic());
+						Contact testContact = new Contact("MyDick", "BT_MAC", "Wifi-MAC",key.genKeyPair().getPublic());
 						mSecureChatManager.addContact(testContact);
 						mSecureChatManager.addConversation(new Conversation(testContact));
 						

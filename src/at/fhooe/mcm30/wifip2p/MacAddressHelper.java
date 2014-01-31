@@ -1,7 +1,6 @@
 package at.fhooe.mcm30.wifip2p;
 
 import java.math.BigInteger;
-import java.util.Locale;
 
 public class MacAddressHelper {
 	

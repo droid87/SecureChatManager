@@ -24,6 +24,7 @@ public class Contact implements Serializable {
 	public Contact(String _name, String _btAddress, String macAddress, Key _publicKey) {
 		mName = _name;
 		mBTAddress = _btAddress;
+		mWifiMacAddress = macAddress;
 		mPublicKey = _publicKey;
 		
 		mPublicKeyEncoded = mPublicKey.getEncoded();

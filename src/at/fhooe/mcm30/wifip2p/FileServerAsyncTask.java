@@ -41,9 +41,9 @@ public class FileServerAsyncTask extends
 	protected String doInBackground(Void... params) {
 		try {
 			ServerSocket serverSocket = new ServerSocket(8988);
-			Log.d(WiFiDirectActivity.TAG, "Server: Socket opened");
+			Log.d(WifiP2pUtils.TAG, "Server: Socket opened");
 			Socket client = serverSocket.accept();
-			Log.d(WiFiDirectActivity.TAG, "Server: connection done");
+			Log.d(WifiP2pUtils.TAG, "Server: connection done");
 			final File f = new File(
 					Environment.getExternalStorageDirectory() + "/"
 							+ context.getPackageName() + "/wifip2pshared-"
@@ -54,14 +54,14 @@ public class FileServerAsyncTask extends
 				dirs.mkdirs();
 			f.createNewFile();
 
-			Log.d(WiFiDirectActivity.TAG,
+			Log.d(WifiP2pUtils.TAG,
 					"server: copying files " + f.toString());
 			InputStream inputstream = client.getInputStream();
 			CopyFileHelper.copyFile(inputstream, new FileOutputStream(f));
 			serverSocket.close();
 			return f.getAbsolutePath();
 		} catch (IOException e) {
-			Log.e(WiFiDirectActivity.TAG, e.getMessage());
+			Log.e(WifiP2pUtils.TAG, e.getMessage());
 			return null;
 		}
 	}

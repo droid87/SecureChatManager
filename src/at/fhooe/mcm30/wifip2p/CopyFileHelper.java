@@ -18,7 +18,7 @@ public class CopyFileHelper {
 			out.close();
 			inputStream.close();
 		} catch (IOException e) {
-			Log.d(WiFiDirectActivity.TAG, e.toString());
+			Log.d(WifiP2pUtils.TAG, e.toString());
 			return false;
 		}
 		return true;
